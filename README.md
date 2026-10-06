@@ -22,10 +22,10 @@ AutoCAD LT 2024 or newer on Windows.
 
 `TerraTools.lsp` loads the modules in `core/`. The scaffold provides
 `TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
-The UUID/XData foundation adds `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`, and
-`TTUNTAGTEST`, `TTPROJECT`, and `TTPROJECTINFO`. It does not create drawing
-entities or change system variables. No external runtime or compiled extension
-is required.
+Current core commands include `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`,
+`TTUNTAGTEST`, `TTPROJECT`, `TTPROJECTINFO`, `TTPREFERENCES`, `TTLAYERS`, and
+`TTSCALE`. The core does not create drawing geometry or change system variables.
+No external runtime or compiled extension is required.
 
 TerraTools smart-entity metadata uses the registered XData application
 `TERRATOOLS`. Schema version 1 stores a `TT_ENTITY` marker, the schema version,
@@ -46,6 +46,23 @@ file and writes `terratools-project.dat.bak`. The current drawing stores the
 project UUID and project data path as `TERRATOOLS` XData on the drawing's Named
 Object Dictionary. This creates no visible drawing entity and does not store the
 complete project record in the DWG.
+
+### Preferences, layers, and scale
+
+Project preferences are stored in the project data file under an additive
+`PREFERENCES` record. Existing schema-version 1 projects without this record use
+`TT_DEFAULT` values until preferences are saved. The project's existing `UNITS`
+field is authoritative; preferences classify it as Imperial or Metric without
+storing a second units value.
+
+Layer preferences map logical roles such as `TREE` and `HELPER_NPLT` to physical
+layer names. `TTLAYERS` creates missing configured layers and leaves an existing
+layer with the same name unchanged. New helper layers use the DXF nonplot flag.
+
+`DRAWING_SCALE` remains a positive number in project data. It is the denominator
+`N` of a dimensionless `1:N` scale ratio. This representation applies equally
+to Imperial and Metric projects and does not depend on AutoCAD's current
+annotation scale.
 
 ### Load in AutoCAD LT
 
@@ -100,8 +117,8 @@ Loading is per drawing; use `APPLOAD` in each drawing for these tests. Automatic
 startup installation is not included. Failed reloads mark the core unavailable
 but do not remove command definitions already loaded in that drawing.
 
-Project management compatibility has been reviewed against the AutoCAD LT 2024
-AutoLISP reference. Real execution in AutoCAD LT is still required before
-treating the project management and storage milestone as tested. The reserved
-feature directories are empty and are not tracked by Git until they contain
-files.
+The Core, UUID/XData, and project management milestones have passed real
+AutoCAD LT testing. Preferences, standard-layer creation, and drawing scale
+still require runtime testing in AutoCAD LT before this milestone is treated as
+stable. The reserved feature directories are empty and are not tracked by Git
+until they contain files.

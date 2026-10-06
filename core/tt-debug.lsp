@@ -1,7 +1,8 @@
 ;;; Read-only diagnostics using AutoCAD system variables.
 ;;; getvar returns nil for an unavailable variable; TT:PrintValue reports it.
 
-(defun C:TTDEBUG (/ *error* project association project-path)
+(defun C:TTDEBUG
+  (/ *error* project association project-path preferences layers-exist)
   (defun *error* (message)
     (TT:ReportError "TTDEBUG" message)
   )
@@ -39,6 +40,31 @@
                    "No"))
   (if (and (null project) (TT:ProjectLastError))
     (TT:PrintValue "Project error" (TT:ProjectLastError)))
+  (if project
+    (progn
+      (setq preferences (TT:LoadPreferences))
+      (if preferences
+        (setq layers-exist (TT:StandardLayersExistP)))))
+  (TT:PrintValue "Active preference set"
+    (if preferences
+      (TT:PreferencesValue preferences 'PREFERENCE_SET_NAME)
+      nil))
+  (TT:PrintValue "Project units"
+    (if project (TT:ProjectValue project 'UNITS) nil))
+  (TT:PrintValue "Annotation text height"
+    (if preferences
+      (TT:PreferencesValue preferences 'ANNOTATION_TEXT_HEIGHT)
+      nil))
+  (TT:PrintValue "Numeric precision"
+    (if preferences
+      (TT:PreferencesValue preferences 'NUMERIC_PRECISION)
+      nil))
+  (TT:PrintValue "Drawing scale"
+    (if project (TT:ProjectValue project 'DRAWING_SCALE) nil))
+  (TT:PrintValue "Standard TerraTools layers exist"
+    (if preferences (if layers-exist "Yes" "No") nil))
+  (if (and project (null preferences) (TT:PreferencesLastError))
+    (TT:PrintValue "Preferences error" (TT:PreferencesLastError)))
   (princ)
 )
 

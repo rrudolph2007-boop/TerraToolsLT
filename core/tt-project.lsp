@@ -31,6 +31,16 @@
   (if pair (cdr pair) nil)
 )
 
+(defun TT:ProjectWithValue (project key value / fields old new)
+  (setq fields (cdr project)
+        old (assoc key fields)
+        new (cons key value))
+  (if old
+    (setq fields (subst new old fields))
+    (setq fields (append fields (list new))))
+  (cons (car project) fields)
+)
+
 (defun TT:ProjectNonEmptyStringP (value)
   (and (eq (type value) 'STR) (not (equal value "")))
 )

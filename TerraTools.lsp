@@ -41,6 +41,8 @@
                       "core/tt-xdata.lsp"
                       "core/tt-storage.lsp"
                       "core/tt-project.lsp"
+                      "core/tt-preferences.lsp"
+                      "core/tt-scale.lsp"
                       "core/tt-debug.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
