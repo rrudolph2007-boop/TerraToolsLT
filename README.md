@@ -24,8 +24,9 @@ AutoCAD LT 2024 or newer on Windows.
 `TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
 Current core commands include `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`,
 `TTUNTAGTEST`, `TTPROJECT`, `TTPROJECTINFO`, `TTPREFERENCES`, `TTLAYERS`, and
-`TTSCALE`. Planting data commands include `TTPLANTS`, `TTPLANTLIST`, and
-`TTPLANTMASTER`. The current planting milestone does not create drawing geometry.
+`TTSCALE`. Development commands include `TTRELOAD` and `TTDEVSMOKE`. Planting
+data commands include `TTPLANTS`, `TTPLANTLIST`, and `TTPLANTMASTER`. The
+current planting milestone does not create drawing geometry.
 No external runtime or compiled extension is required.
 
 TerraTools smart-entity metadata uses the registered XData application
@@ -97,9 +98,13 @@ and contains a project-specific copy of the editable specifications.
    history. Press F2 if needed to see the complete output.
 
 The loader finds `TerraTools.lsp` through AutoCAD's file search paths, or asks
-for its location if it cannot be found. It loads every core module by explicit
+for its location if it cannot be found. It loads every module by explicit
 path relative to that file's folder. Keep only one TerraTools installation on
 the search paths, since the first matching loader determines the root.
+
+After the initial `APPLOAD`, run `TTRELOAD` to reload that exact TerraTools
+installation after editing source files. Run `TTDEVSMOKE` for a read-only check
+of the loaded core, project data, preferences, scale, and planting data.
 
 ### Manual checks
 

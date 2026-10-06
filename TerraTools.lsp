@@ -1,9 +1,10 @@
 ;;; TerraTools LT 0.1.0 - application loader for AutoCAD LT 2024+ on Windows.
 ;;; Add the installation folder to the Support File Search Path, then APPLOAD
 ;;; this file. If it cannot be found there, select this file when prompted.
-;;; The installation folder and core folder must be trusted by AutoCAD.
+;;; The installation folder and loaded subfolders must be trusted by AutoCAD.
 
-(defun TT:Load (/ *error* loader-path module-path modules module-name ok)
+(defun TT:Load
+  (/ *error* requested-loader-path loader-path module-path modules module-name ok)
   ;; A local handler also covers failures before tt-errors.lsp is available.
   ;; Localizing *error* restores the caller's handler when this function exits.
   (defun *error* (message)
@@ -14,12 +15,22 @@
     (princ)
   )
 
+  ;; TTRELOAD supplies an exact loader path so another support-path copy cannot
+  ;; take precedence. Consume the override once and clear it immediately.
+  (if (and (boundp '*TT:LoaderPathOverride*)
+           (eq (type *TT:LoaderPathOverride*) 'STR))
+    (setq requested-loader-path (findfile *TT:LoaderPathOverride*)))
+  (setq *TT:LoaderPathOverride* nil)
+
   ;; Clear readiness on every attempt, including a failed reload.
   (setq *TT:Version* "0.1.0"
         *TT:CoreLoaded* nil
         *TT:PlantingModuleLoaded* nil
         *TT:Root* nil
-        loader-path (findfile "TerraTools.lsp"))
+        loader-path requested-loader-path)
+
+  (if (not loader-path)
+    (setq loader-path (findfile "TerraTools.lsp")))
 
   (if (not loader-path)
     (setq loader-path
@@ -46,7 +57,8 @@
                       "core/tt-scale.lsp"
                       "planting/tt-plant-db.lsp"
                       "planting/tt-plant-manager.lsp"
-                      "core/tt-debug.lsp")
+                      "core/tt-debug.lsp"
+                      "core/tt-dev.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
       ;; names that could resolve to files in another support directory.
