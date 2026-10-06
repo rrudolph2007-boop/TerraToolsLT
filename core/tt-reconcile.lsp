@@ -5,7 +5,7 @@
 )
 
 (setq *TT:KnownObjectTypes*
-  '("PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"
+  '("DRIP_AREA" "PLANT_LABEL_LEADER" "PLANT_AREA_DENSITY" "PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"
     "PLANT_MIX_AREA" "PLANT_LABEL" "PLANT_SCHEDULE" "WORK_AREA"
     "REFNOTE_NOTATION" "REFNOTE_COUNT" "REFNOTE_LENGTH" "REFNOTE_AREA"
     "REFNOTE_VOLUME" "REFNOTE_AMENITY" "REFNOTE_MATERIAL" "REFNOTE_HARDSCAPE"
@@ -83,11 +83,14 @@
   (princ)
 )
 
-(defun C:TTVERIFY (/ *error* report)
+(defun C:TTVERIFY (/ *error* report palette code)
   (defun *error* (message) (TT:ReportError "TTVERIFY" message))
   (setq report (TT:ReconcileScan nil))
   (princ "\nTerraTools verification")
   (TT:PrintReconcileReport report)
+  (if (setq palette (TT:PlantPaletteLoad))
+    (foreach code (TT:PlantDuplicateCodes palette)
+      (princ (strcat "\nDuplicate project plant code: " code))))
   (princ)
 )
 

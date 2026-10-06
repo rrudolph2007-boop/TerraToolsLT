@@ -20,7 +20,7 @@
         ((and (equal object-type "PLANT_INSTANCE")
               (equal project-id (cdr (assoc 'CATALOG_ID metadata))))
           (setq quantity (1+ quantity)))
-        ((and (member object-type '("PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"))
+        ((and (member object-type '("PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR" "PLANT_AREA_DENSITY"))
               (equal project-id (cdr (assoc 'CATALOG_ID metadata))))
           (setq area-quantity (TT:PlantAreaQuantity (car item) metadata))
           (if area-quantity (setq quantity (+ quantity area-quantity))))
@@ -68,18 +68,7 @@
   (reverse rows)
 )
 
-(defun TT:PlantScheduleText (rows / text row)
-  (setq text "PLANT SCHEDULE\\PCODE | QTY | BOTANICAL NAME | COMMON NAME | SIZE | SPACING")
-  (foreach row rows
-    (setq text
-      (strcat text "\\P" (TT:DataValue row 'CODE) " | "
-              (itoa (TT:DataValue row 'QUANTITY)) " | "
-              (TT:DataValue row 'BOTANICAL_NAME) " | "
-              (TT:DataValue row 'COMMON_NAME) " | "
-              (TT:DataValue row 'SIZE) " | "
-              (TT:DataValue row 'SPACING))))
-  text
-)
+(defun TT:PlantScheduleText (rows) (TT:StyledScheduleText rows (TT:ScheduleStyle)))
 
 (defun TT:CreateMText (point height width text layer)
   (entmakex
@@ -102,7 +91,7 @@
     (progn
       (setq height (TT:GetPreference 'ANNOTATION_TEXT_HEIGHT))
       (if (not (numberp height)) (setq height 0.1))
-      (setq entity (TT:CreateMText point height (* height 80.0)
+      (setq entity (TT:CreateMText point height (* height (TT:DataValue (TT:ScheduleStyle) 'WIDTH))
                      (TT:PlantScheduleText rows) (TT:GetLayerForRole 'PLANT_SCHEDULE))
             id (TT:GenerateUUID))
       (if (and entity (TT:SmartAttach entity project "SCHEDULES" "PLANT_SCHEDULE" id work-area-id))

@@ -118,7 +118,7 @@
     (princ "\nA TerraTools project must be active."))
   (princ))
 
-(defun C:TTLIGHTING (/ option)
+(defun C:TTLIGHTINGCLI (/ option)
   (initget "List Add Edit Remove Place Replace Info Wire Transformer Circuit Load Capacity VoltageDrop Schedule Verify")
   (setq option (getkword "\nLighting [List/Add/Edit/Remove/Place/Replace/Info/Wire/Transformer/Circuit/Load/Capacity/VoltageDrop/Schedule/Verify] <List>: "))
   (if (null option) (setq option "List"))

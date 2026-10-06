@@ -17,7 +17,9 @@
         area (TT:EntityArea entity)
         factor (if (equal (cdr (assoc 'OBJECT_TYPE metadata)) "PLANT_AREA_TRIANGULAR")
                  0.8660254 1.0))
-  (TT:PlantQuantityFromArea area spacing (equal factor 0.8660254))
+  (if (equal (cdr (assoc 'OBJECT_TYPE metadata)) "PLANT_AREA_DENSITY")
+    (TT:PlantDensityQuantity area record)
+    (TT:PlantQuantityFromArea area spacing (equal factor 0.8660254)))
 )
 
 (defun C:TTGROUND (/ *error* project record selection entity method object-type layer)
@@ -48,7 +50,7 @@
   (setq item (TT:SelectSmartEntity "\nSelect smart planting area: "))
   (if (and item
            (member (cdr (assoc 'OBJECT_TYPE (cdr item)))
-                   '("PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR")))
+                   '("PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR" "PLANT_AREA_DENSITY")))
     (progn
       (setq metadata (cdr item)
             record (TT:PlantFindProjectByID (cdr (assoc 'CATALOG_ID metadata)))

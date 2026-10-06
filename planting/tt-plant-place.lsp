@@ -22,7 +22,8 @@
 )
 
 (defun TT:PlantLayerRole (record)
-  (TT:PlantRecordValue record 'CATEGORY)
+  (if (member (TT:PlantRecordValue record 'CATEGORY) '(TREE SHRUB GROUNDCOVER))
+    (TT:PlantRecordValue record 'CATEGORY) 'GROUNDCOVER)
 )
 
 (defun TT:PlantSymbolStyle (record / category)
@@ -39,13 +40,16 @@
   (TT:EnsureSymbolBlock name (TT:PlantSymbolStyle record))
 )
 
-(defun TT:PlantCreateInstance (project record point work-area-id / layer block entity)
+(defun TT:PlantCreateInstance (project record point work-area-id / layer block entity scale)
   (setq layer (TT:EnsureLayer (TT:PlantLayerRole record)))
   (if (null layer) (setq layer "0"))
+  (if (null work-area-id) (setq work-area-id (TT:ActiveWorkArea project)))
+  (setq scale (TT:DataValue record 'SYMBOL_SCALE))
+  (if (not (and (numberp scale) (> scale 0.0))) (setq scale 1.0))
   (setq block (TT:PlantEnsureSymbol record))
   (if block
     (progn
-      (setq entity (TT:CreateInsert block point layer 1.0))
+      (setq entity (TT:CreateInsert block point layer scale))
       (if (and entity
                (TT:SmartAttach entity project "PLANTING" "PLANT_INSTANCE"
                  (TT:PlantRecordValue record 'PROJECT_PLANT_ID) work-area-id))

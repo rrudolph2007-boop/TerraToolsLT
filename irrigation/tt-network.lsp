@@ -95,11 +95,11 @@
             (cond
               ((equal (cdr (assoc 'OBJECT_TYPE data)) "POC")
                 (setq sources (cons (TT:IrrigationEntityPoint (car item)) sources)))
-              ((and (assoc 'FLOW_GPM data) (> (cdr (assoc 'FLOW_GPM data)) 0.0))
+              ((and (assoc 'FLOW_GPM data) (>= (cdr (assoc 'FLOW_GPM data)) 0.0))
                 (setq record (TT:IrrigationFind palette (cdr (assoc 'CATALOG_ID data))))
-                (if (and record (numberp (TT:DataValue record 'PRESSURE_PSI)))
+                (if (or (and record (numberp (TT:DataValue record 'PRESSURE_PSI))) (numberp (cdr (assoc 'PRESSURE_PSI data))))
                   (setq demands (cons (list (TT:IrrigationEntityPoint (car item))
-                    (cdr (assoc 'FLOW_GPM data)) (TT:DataValue record 'PRESSURE_PSI)
+                    (cdr (assoc 'FLOW_GPM data)) (if record (TT:DataValue record 'PRESSURE_PSI) (cdr (assoc 'PRESSURE_PSI data)))
                     (TT:SafeNumber (TT:DataValue record 'LOSS_PSI) 0.0)) demands))
                   (setq invalid T)))))))
       (if invalid
@@ -112,7 +112,9 @@
     (progn
       (setq nodes (TT:DataValue graph 'NODES) edges (TT:DataValue graph 'EDGES)
             flows (TT:DataValue graph 'FLOWS) pending edges progress T
-            losses (list (cons (TT:DataValue graph 'ROOT) 0.0))
+            losses (list (cons (TT:DataValue graph 'ROOT)
+                          (TT:DataValue (TT:NetworkNode (TT:DataValue graph 'NODES)
+                            (TT:DataValue graph 'ROOT)) 'LOSS)))
             paths (list (cons (TT:DataValue graph 'ROOT) nil)) maximum 0.0)
       (while (and pending progress)
         (setq remaining nil progress nil)
@@ -124,7 +126,7 @@
                     rise (TT:ConvertLength (- (caddr (TT:DataValue node 'POINT))
                              (caddr (TT:DataValue (TT:NetworkNode nodes from) 'POINT))) unit 'FEET)
                     result (TT:HydraulicPipeResult (TT:DataValue edge 'LENGTH_FT)
-                      (cdr (assoc to flows)) (cdr (assoc 'DIAMETER_IN (TT:DataValue edge 'DATA)))
+                      (cdr (assoc to flows)) (TT:PipeInsideDiameter (TT:DataValue edge 'DATA))
                       (cdr (assoc 'C_FACTOR (TT:DataValue edge 'DATA))) rise (TT:DataValue node 'LOSS)))
               (if result
                 (progn

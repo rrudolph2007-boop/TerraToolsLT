@@ -1,0 +1,167 @@
+;;; Project record managers share browsing/editing mechanics, not domain identity.
+(defun TT:ManagerConfig (kind)
+  ;; section, identity key, visible code key, title, editable fields
+  (cond
+    ((eq kind 'WORK) '(WORK_AREAS WORK_AREA_ID NAME "Work Areas" ((NAME "Name" REQUIRED))))
+    ((eq kind 'SITE) '(REFERENCE_NOTES NOTE_ID CODE "Reference Notes"
+      ((CODE "Code" REQUIRED) (DESCRIPTION "Description" REQUIRED) (UNIT_COST "Unit cost" NONNEGATIVE) (DEPTH "Depth, drawing units" NONNEGATIVE))))
+    ((eq kind 'DETAIL) '(DETAIL_LIBRARY DETAIL_ID NUMBER "Details"
+      ((NUMBER "Detail number" REQUIRED) (TITLE "Title" REQUIRED) (CATEGORY "Category" TEXT) (KEYWORDS "Keywords" TEXT)
+       (NOTES "Notes" TEXT) (SOURCE_FILE "Source DWG path" TEXT))))
+    ((eq kind 'LIGHT) '(LIGHTING_PALETTE FIXTURE_ID CODE "Lighting Fixtures"
+      ((CODE "Code" REQUIRED) (DESCRIPTION "Description" REQUIRED) (WATTAGE "Watts" NONNEGATIVE)
+       (VOLTAGE "Volts" POSITIVE) (UNIT_COST "Unit cost" NONNEGATIVE) (SYMBOL "Symbol block" REQUIRED))))
+    ((eq kind 'IRR) '(IRRIGATION_PALETTE EQUIPMENT_ID CODE "Irrigation Equipment"
+      ((CODE "Code" REQUIRED) (DESCRIPTION "Description" REQUIRED) (FLOW_GPM "Flow, gpm" NONNEGATIVE)
+       (PRESSURE_PSI "Required pressure, psi" NONNEGATIVE) (LOSS_PSI "Inline loss, psi" NONNEGATIVE)
+       (RADIUS_FT "Radius, feet" NONNEGATIVE) (UNIT_COST "Unit cost" NONNEGATIVE))))
+    ((eq kind 'STATION) '(IRRIGATION_STATIONS STATION_ID NAME "Stations"
+      ((NAME "Station name" REQUIRED) (CONTROLLER "Controller name" TEXT) (OUTPUT "Controller output" INTEGER)
+       (NOTES "Notes" TEXT))))
+    ((eq kind 'CONTROLLER) '(IRRIGATION_CONTROLLERS CONTROLLER_ID NAME "Controllers"
+      ((NAME "Controller name" REQUIRED) (CAPACITY "Station capacity" INTEGER) (DESCRIPTION "Description" TEXT))))))
+
+(defun TT:ManagerLabel (record config / title)
+  (setq title (TT:DataValue record 'DESCRIPTION))
+  (if (null title) (setq title (TT:DataValue record 'TITLE)))
+  (strcat (TT:UIValue (TT:DataValue record (nth 2 config)))
+    (if title (strcat " | " (TT:UIValue title)) "")))
+
+(defun TT:ManagerSelected ()
+  (nth (atoi (get_tile "records")) manager-visible))
+
+(defun TT:ManagerDetail (/ record path count)
+  (setq record (TT:ManagerSelected) path (TT:ProjectResourcePath (TT:DataValue record 'SOURCE_FILE)))
+  (set_tile "detail" (if record
+    (if (and path (/= path ""))
+      (strcat (if (findfile path) "Source available: " "Source unavailable: ") path)
+      (TT:ManagerLabel record manager-config)) "No selection.")))
+
+(defun TT:ManagerRefresh (/ record query text)
+  (setq manager-project (TT:ProjectCurrent) manager-visible nil query (strcase (get_tile "query")))
+  (foreach record (TT:ProjectValue manager-project (car manager-config))
+    (setq text (strcase (strcat (TT:ManagerLabel record manager-config) " "
+      (TT:UIValue (TT:DataValue record 'CATEGORY)) " " (TT:UIValue (TT:DataValue record 'KEYWORDS)))))
+    (if (or (= query "") (vl-string-search query text)) (setq manager-visible (cons record manager-visible))))
+  (setq manager-visible (reverse manager-visible))
+  (start_list "records") (foreach record manager-visible (add_list (TT:ManagerLabel record manager-config))) (end_list)
+  (set_tile "records" "0")
+  (foreach text '("edit" "remove" "place" "highlight") (mode_tile text (if manager-visible 0 1)))
+  (set_tile "status" (if manager-visible (strcat (itoa (length manager-visible)) " records. Changes belong to this project.")
+    "No matching records. Add a record or clear the search."))
+  (TT:ManagerDetail))
+
+(defun TT:ManagerIdentityInUse (record config items / id item used)
+  (setq id (TT:DataValue record (cadr config)))
+  (foreach item items
+    (if (or (equal id (cdr (assoc 'CATALOG_ID (cdr item))))
+            (equal id (cdr (assoc 'WORK_AREA_ID (cdr item))))) (setq used T)))
+  used)
+
+(defun TT:ManagerSaveRecord (kind record old / config project records key other collision controller stations station outputs)
+  (setq config (TT:ManagerConfig kind) project (TT:ProjectCurrent)
+        records (TT:ProjectValue project (car config)) key (nth 2 config))
+  (foreach other records
+    (if (and (not (equal (TT:DataValue other (cadr config)) (TT:DataValue record (cadr config))))
+      (= (strcase (TT:UIValue (TT:DataValue other key))) (strcase (TT:UIValue (TT:DataValue record key))))) (setq collision T)))
+  (cond
+    ((null project) nil)
+    (collision (princ "\nThat name or code is already used. Choose a distinct value.") nil)
+    ((and old (member kind '(STATION CONTROLLER)) (not (equal (TT:DataValue old 'NAME) (TT:DataValue record 'NAME))))
+      (princ "\nStation/controller names are references. Create a new name and reassign its uses before removing the old record.") nil)
+    ((and (eq kind 'STATION) (/= (TT:DataValue record 'CONTROLLER) "")
+      (not (TT:StationAssignmentValid project record old))) nil)
+    ((and (eq kind 'CONTROLLER) (not (TT:ControllerCapacityValid project record))) nil)
+    (T (TT:ProjectSaveSection (car config) (if old (subst record old records) (append records (list record)))))))
+
+(defun TT:StationAssignmentValid (project record old / controller station valid)
+  (setq controller (TT:DataFindByValue (TT:ProjectValue project 'IRRIGATION_CONTROLLERS) 'NAME (TT:DataValue record 'CONTROLLER))
+        valid (and controller (<= (TT:DataValue record 'OUTPUT) (TT:DataValue controller 'CAPACITY))))
+  (foreach station (TT:ProjectValue project 'IRRIGATION_STATIONS)
+    (if (and (not (equal station old)) (equal (TT:DataValue station 'CONTROLLER) (TT:DataValue record 'CONTROLLER))
+             (equal (TT:DataValue station 'OUTPUT) (TT:DataValue record 'OUTPUT))) (setq valid nil)))
+  (if (not valid) (princ "\nController is missing, its output is already assigned, or the output exceeds capacity."))
+  valid)
+
+(defun TT:ControllerCapacityValid (project record / station valid)
+  (setq valid T)
+  (foreach station (TT:ProjectValue project 'IRRIGATION_STATIONS)
+    (if (and (equal (TT:DataValue station 'CONTROLLER) (TT:DataValue record 'NAME))
+             (> (TT:DataValue station 'OUTPUT) (TT:DataValue record 'CAPACITY))) (setq valid nil)))
+  (if (not valid) (princ "\nCapacity is below an assigned station output. Reassign that station first."))
+  valid)
+
+(defun TT:ManagerHighlight (kind record / config id item data count selected)
+  (setq config (TT:ManagerConfig kind) id (TT:DataValue record (cadr config)) count 0 selected (ssadd))
+  (foreach item (TT:SmartScan)
+    (setq data (cdr item))
+    (if (or (equal id (cdr (assoc 'CATALOG_ID data))) (equal id (cdr (assoc 'WORK_AREA_ID data)))
+      (and (eq kind 'STATION) (equal (TT:DataValue record 'NAME) (cdr (assoc 'STATION data)))))
+      (progn (ssadd (car item) selected) (setq count (1+ count)))))
+  (sssetfirst nil selected) (TT:PrintValue "Selected objects" count))
+
+(defun TT:ManagerNew (kind / config record field)
+  (setq config (TT:ManagerConfig kind) record (list (car config) (cons (cadr config) (TT:GenerateUUID))))
+  (foreach field (nth 4 config)
+    (setq record (TT:DataPut record (car field) (if (member (nth 2 field) '(INTEGER POSITIVE)) 1.0
+      (if (eq (nth 2 field) 'NONNEGATIVE) 0.0 "")))))
+  (setq record (TT:UIEditRecord record (nth 4 config) (strcat "TerraTools LT | " (nth 3 config))))
+  (if record (TT:ManagerSaveRecord kind record nil)))
+
+(defun TT:ManagerAction (kind action record / config project records edited answer item blocked)
+  (setq config (TT:ManagerConfig kind) project (TT:ProjectCurrent) records (TT:ProjectValue project (car config)))
+  (cond
+    ((= action 1)
+      (cond ((eq kind 'WORK) (C:TTWORKAREA)) ((eq kind 'SITE) (C:TTREFNOTE))
+        ((eq kind 'DETAIL) (TT:ManagerNew kind)) ((eq kind 'LIGHT) (TT:LightingPaletteAdd))
+        ((eq kind 'IRR) (TT:IrrigationAdd)) (T (TT:ManagerNew kind))))
+    ((and (= action 2) record)
+      (setq edited (TT:UIEditRecord record (nth 4 config) (strcat "TerraTools LT | " (nth 3 config))))
+      (if edited (TT:ManagerSaveRecord kind edited record)))
+    ((and (= action 3) record)
+      (setq blocked (TT:ManagerIdentityInUse record config (TT:SmartScan)))
+      (if (member kind '(STATION CONTROLLER)) (setq blocked T))
+      (if blocked (princ "\nRemoval refused: resolve drawing dependencies first. Station/controller records are retained for reference safety.")
+        (progn
+          (initget "Yes No") (setq answer (getkword "\nRemove record? Check other project drawings first. [Yes/No] <No>: "))
+          (if (= answer "Yes") (TT:ProjectSaveSection (car config) (vl-remove record records))))))
+    ((and (= action 4) record) (TT:ManagerPlace kind record))
+    ((and (= action 5) record) (TT:ManagerHighlight kind record))
+    ((= action 6) (TT:LibraryCommand kind))
+    ((= action 7)
+      (cond ((eq kind 'WORK) (C:TTWORKAREASCLI)) ((eq kind 'SITE) (C:TTSITE))
+        ((eq kind 'DETAIL) (C:TTDETAILSCLI)) ((eq kind 'LIGHT) (C:TTLIGHTINGCLI))
+        ((eq kind 'IRR) (C:TTIRRIGATIONCLI)) (T (if record (TT:UIRecordDetails record)))))))
+
+(defun TT:RecordManager (kind / *error* manager-config manager-project manager-visible dialog-id action selected query key pair opened)
+  (defun *error* (message)
+    (if (and dialog-id (> dialog-id 0)) (unload_dialog dialog-id))
+    (TT:ReportError "Project manager" message))
+  (setq manager-config (TT:ManagerConfig kind) manager-project (TT:ProjectCurrent) action 1 query "")
+  (if (null manager-project) (princ "\nOpen a TerraTools project before using this manager.")
+    (while (> action 0)
+      (setq dialog-id (load_dialog (TT:StorageJoinPath *TT:Root* "dialogs/terratools-records.dcl")))
+      (if (and (> dialog-id 0) (new_dialog "terratools_records" dialog-id))
+        (progn
+          (setq opened T)
+          (set_tile "title" (strcat "TerraTools LT | " (nth 3 manager-config)))
+          (set_tile "context" (strcat (TT:ProjectValue manager-project 'PROJECT_NAME) " | " (nth 3 manager-config)))
+          (set_tile "query" query) (TT:ManagerRefresh)
+          (action_tile "search" "(TT:ManagerRefresh)") (action_tile "records" "(TT:ManagerDetail)")
+          (mode_tile "library" (if (member kind '(DETAIL LIGHT IRR)) 0 1))
+          (foreach pair '(("add" . 1) ("edit" . 2) ("remove" . 3) ("place" . 4) ("highlight" . 5) ("library" . 6) ("more" . 7))
+            (action_tile (car pair) (strcat "(setq selected (TT:ManagerSelected) query (get_tile \"query\"))(done_dialog " (itoa (cdr pair)) ")")))
+          (action_tile "cancel" "(done_dialog 0)")
+          (setq action (start_dialog)) (unload_dialog dialog-id) (setq dialog-id nil)
+          (if (> action 0) (TT:ManagerAction kind action selected)))
+        (progn (if (> dialog-id 0) (unload_dialog dialog-id)) (setq dialog-id nil action 0)))))
+  opened)
+
+(defun C:TTWORKAREAS () (if (not (TT:RecordManager 'WORK)) (C:TTWORKAREASCLI)) (princ))
+(defun C:TTREFNOTES () (TT:RecordManager 'SITE) (princ))
+(defun C:TTDETAILS () (if (not (TT:RecordManager 'DETAIL)) (C:TTDETAILSCLI)) (princ))
+(defun C:TTLIGHTING () (if (not (TT:RecordManager 'LIGHT)) (C:TTLIGHTINGCLI)) (princ))
+(defun C:TTIRRIGATION () (if (not (TT:RecordManager 'IRR)) (C:TTIRRIGATIONCLI)) (princ))
+(defun C:TTSTATIONS () (TT:RecordManager 'STATION) (princ))
+(defun C:TTCONTROLLERS () (TT:RecordManager 'CONTROLLER) (princ))
+T

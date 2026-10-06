@@ -90,7 +90,7 @@
     (if project (princ "\nThe Project Irrigation Palette is empty.")
       (princ "\nA TerraTools project must be active."))))
 
-(defun C:TTIRRIGATION (/ option)
+(defun C:TTIRRIGATIONCLI (/ option)
   (initget "List Add Place Pipe Drip Coverage Label Assign Zone Analyze Size Watering Schedule Verify")
   (setq option (getkword "\nIrrigation [List/Add/Place/Pipe/Drip/Coverage/Label/Assign/Zone/Analyze/Size/Watering/Schedule/Verify] <List>: "))
   (if (null option) (setq option "List"))
@@ -131,7 +131,7 @@
           (princ "\nIrrigation equipment placed.")))))
   (princ))
 
-(defun C:TTPIPE (/ project type a b class diameter c station layer entity metadata)
+(defun TT:LegacyTTPIPE (/ project type a b class diameter c station layer entity metadata)
   (setq project (TT:ProjectCurrent))
   (if project
     (progn
@@ -162,7 +162,7 @@
         (princ "\nPipe input is invalid or placement was canceled."))))
   (princ))
 
-(defun C:TTIRRIGATIONCOVERAGE (/ item point radius layer circle metadata)
+(defun TT:LegacyTTIRRIGATIONCOVERAGE (/ item point radius layer circle metadata)
   (setq item (TT:SelectSmartEntity "\nSelect an irrigation head: "))
   (if (and item (equal (cdr (assoc 'MODULE (cdr item))) "IRRIGATION")
            (member (cdr (assoc 'OBJECT_TYPE (cdr item))) '("SPRAY_HEAD" "ROTOR")))
@@ -369,7 +369,7 @@
     (if length (princ "\nNo available diameter satisfies the criteria, or inputs are invalid.")))
   (princ))
 
-(defun C:TTIRRIGATIONSIZE (/ item data station items pipes equipment pipe-item branch length master class diameter answer analysis)
+(defun TT:LegacyTTIRRIGATIONSIZE (/ item data station items pipes equipment pipe-item branch length master class diameter answer analysis)
   (setq item (TT:SelectSmartEntity "\nSelect a smart irrigation pipe: "))
   (cond
     ((null item) nil)

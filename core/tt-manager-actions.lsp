@@ -1,0 +1,59 @@
+;;; Selected-record actions shared by the project managers.
+(defun TT:ActiveWorkArea (project / record)
+  (if (and (boundp '*TT:ActiveWorkArea*) *TT:ActiveWorkArea*
+    (equal (car *TT:ActiveWorkArea*) (TT:ProjectValue project 'PROJECT_UUID))
+    (setq record (TT:WorkAreaFind project (cdr *TT:ActiveWorkArea*))))
+    (TT:DataValue record 'WORK_AREA_ID)))
+
+(defun C:TTACTIVEWORKAREA (/ project record)
+  (setq project (TT:ProjectCurrent))
+  (if project
+    (progn
+      (princ "\nChoose a Work Area for subsequent placements. Enter clears the active area.")
+      (setq record (TT:SelectWorkAreaRecord project)
+            *TT:ActiveWorkArea* (if record (cons (TT:ProjectValue project 'PROJECT_UUID) (TT:DataValue record 'WORK_AREA_ID))))
+      (TT:PrintValue "Active Work Area" (if record (TT:DataValue record 'NAME) "None"))))
+  (princ))
+
+(defun TT:ManagerPlace (kind record / *error* undo-open project point block layer entity metadata selection index data old)
+  (defun *error* (message)
+    (if undo-open (command-s "_.UNDO" "_End")) (TT:ReportError "Place / Assign" message))
+  (setq project (TT:ProjectCurrent))
+  (cond
+    ((member kind '(WORK STATION))
+      (princ "\nSelect project objects to assign: ") (setq selection (ssget "_:L") index 0)
+      (if selection
+        (progn
+          (command-s "_.UNDO" "_Begin") (setq undo-open T)
+          (while (< index (sslength selection))
+            (setq entity (ssname selection index) data (TT:GetEntityXData entity) index (1+ index))
+            (if (and data (equal (cdr (assoc 'PROJECT_UUID data)) (TT:ProjectValue project 'PROJECT_UUID))
+              (not (equal (cdr (assoc 'OBJECT_TYPE data)) "WORK_AREA"))
+              (or (eq kind 'WORK) (equal (cdr (assoc 'MODULE data)) "IRRIGATION")))
+              (TT:SetEntityXData entity (TT:SmartMetadataPut data (if (eq kind 'WORK) 'WORK_AREA_ID 'STATION)
+                (TT:DataValue record (if (eq kind 'WORK) 'WORK_AREA_ID 'NAME))))))
+          (command-s "_.UNDO" "_End") (setq undo-open nil))))
+    ((eq kind 'CONTROLLER) (TT:UIRecordDetails record))
+    ((eq kind 'SITE)
+      (setq selection (entsel "\nSelect ordinary geometry to assign this reference note: "))
+      (if (and selection (not (TT:GetEntityXData (car selection))))
+        (TT:SmartAttach (car selection) project "SITE" (strcat "REFNOTE_" (TT:SiteTypeName (TT:DataValue record 'TYPE)))
+          (TT:DataValue record 'NOTE_ID) (TT:ActiveWorkArea project))
+        (princ "\nChoose untagged geometry. Existing smart-object metadata is preserved.")))
+    ((member kind '(DETAIL LIGHT IRR))
+      (setq layer (TT:EnsureLayer (cond ((eq kind 'DETAIL) 'DETAIL) ((eq kind 'LIGHT) 'LIGHT_FIXTURE) (T 'IRR_HEAD)))
+        block (cond ((eq kind 'DETAIL) "TT_DETAIL_FRAME") ((eq kind 'LIGHT) (TT:DataValue record 'SYMBOL))
+               (T (strcat "TT_IRR_" (TT:DataValue record 'CODE)))))
+      (if (and layer (TT:EnsureSymbolBlock block 'SQUARE))
+        (progn
+          (command-s "_.UNDO" "_Begin") (setq undo-open T)
+          (while (setq point (getpoint "\nInsertion point <finish>: "))
+            (setq entity (TT:CreateInsert block (trans point 1 0) layer (if (eq kind 'DETAIL) 10.0 1.0))
+              metadata (TT:SmartMetadata project
+                (cond ((eq kind 'DETAIL) "DETAILS") ((eq kind 'LIGHT) "LIGHTING") (T "IRRIGATION"))
+                (cond ((eq kind 'DETAIL) "DETAIL_INSTANCE") ((eq kind 'LIGHT) "FIXTURE") (T (TT:IrrigationCategoryName (TT:DataValue record 'CATEGORY))))
+                (TT:DataValue record (cadr (TT:ManagerConfig kind))) (TT:ActiveWorkArea project)))
+            (if (eq kind 'IRR) (setq metadata (TT:SmartMetadataPut metadata 'FLOW_GPM (TT:DataValue record 'FLOW_GPM))))
+            (if (and entity (not (TT:SetEntityXData entity metadata))) (entdel entity)))
+          (command-s "_.UNDO" "_End") (setq undo-open nil))))))
+T

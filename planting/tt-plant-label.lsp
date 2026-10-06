@@ -7,22 +7,10 @@
   (if record (TT:PlantRecordValue record 'PLANT_CODE) "UNKNOWN")
 )
 
-(defun TT:PlantLabelText (target-uuids / uuid item metadata project-id count)
-  (setq count 0)
-  (foreach uuid target-uuids
-    (if (setq item (TT:SmartFindByUUID uuid))
-      (progn
-        (setq metadata (cdr item))
-        (if (equal (cdr (assoc 'OBJECT_TYPE metadata)) "PLANT_INSTANCE")
-          (progn
-            (setq count (1+ count))
-            (if (null project-id) (setq project-id (cdr (assoc 'CATALOG_ID metadata)))))))))
-  (if (> count 0)
-    (strcat (itoa count) " " (TT:PlantCodeForProjectID project-id))
-    "0 ORPHANED")
-)
+(defun TT:PlantLabelText (target-uuids)
+  (TT:PlantLabelFromItems target-uuids (TT:SmartScan) (TT:ProjectCurrent)))
 
-(defun TT:CreatePlantLabel (entities / project uuids item metadata point height text label-id label records entity catalog-id catalog-ids layer)
+(defun TT:CreatePlantLabel (entities / project uuids item metadata point height text label-id label records entity catalog-id catalog-ids layer leader target)
   (setq project (TT:ProjectCurrent))
   (foreach item entities
     (setq metadata (cdr item))
@@ -42,14 +30,20 @@
       (setq layer (TT:EnsureLayer 'PLANT_LABEL))
       (setq text (TT:PlantLabelText uuids)
             label-id (TT:GenerateUUID)
-            entity (if layer (TT:CreateText point height text layer))
+            entity (if layer (TT:CreateText (trans point 1 0) height text layer))
             label (list 'PLANT_LABEL (cons 'LABEL_ID label-id)
                         (cons 'TARGET_UUIDS uuids))
             records (append (TT:PlantLabels project) (list label)))
       (if (and entity
                (TT:SmartAttach entity project "PLANTING" "PLANT_LABEL" label-id nil)
                (TT:ProjectSaveSection 'PLANT_LABELS records))
-        (princ (strcat "\nPlant label created: " text))
+        (progn
+          (if (= (strcase (TT:DataValue (TT:LabelStyle) 'LEADER)) "YES")
+            (progn
+              (setq target (cdr (assoc 10 (entget (caar entities))))
+                    leader (if target (TT:CreateLine target (trans point 1 0) layer)))
+              (if leader (TT:SmartAttach leader project "PLANTING" "PLANT_LABEL_LEADER" label-id nil))))
+          (princ (strcat "\nPlant label created: " text)))
         (if entity (entdel entity))))))
 )
 
@@ -74,12 +68,12 @@
   (princ)
 )
 
-(defun TT:UpdatePlantLabelEntity (item project / metadata label-id record text data)
+(defun TT:UpdatePlantLabelEntity (item project all-items / metadata label-id record text data)
   (setq metadata (cdr item) label-id (cdr (assoc 'CATALOG_ID metadata))
         record (TT:DataFindByValue (TT:PlantLabels project) 'LABEL_ID label-id))
   (if record
     (progn
-      (setq text (TT:PlantLabelText (TT:DataValue record 'TARGET_UUIDS))
+      (setq text (TT:PlantLabelFromItems (TT:DataValue record 'TARGET_UUIDS) all-items project)
             data (entget (car item)))
       (if (assoc 1 data)
         (entmod (subst (cons 1 text) (assoc 1 data) data))
@@ -87,16 +81,17 @@
     nil)
 )
 
-(defun C:TTUPDATEPLANTLABELS (/ *error* project items item updated invalid)
+(defun C:TTUPDATEPLANTLABELS (/ *error* project items item updated invalid all-items)
   (defun *error* (message) (TT:ReportError "TTUPDATEPLANTLABELS" message))
   (setq project (TT:ProjectCurrent)
-        items (TT:SmartFilter (TT:SmartScan) "PLANTING" "PLANT_LABEL")
+        all-items (TT:SmartScan)
+        items (TT:SmartFilter all-items "PLANTING" "PLANT_LABEL")
         updated 0 invalid 0)
   (if project
     (progn
       (command-s "_.UNDO" "_Begin")
       (foreach item items
-        (if (TT:UpdatePlantLabelEntity item project)
+        (if (TT:UpdatePlantLabelEntity item project all-items)
           (setq updated (1+ updated))
           (setq invalid (1+ invalid))))
       (command-s "_.UNDO" "_End")

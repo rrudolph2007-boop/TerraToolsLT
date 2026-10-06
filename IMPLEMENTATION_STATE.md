@@ -22,7 +22,32 @@ inferred from static checks. Existing source-independent project copies must sur
 8. Update parity, acceptance, guides, release checklist and final report with
    exact remaining blockers. Do not mark placeholders complete.
 
-## Audit findings
+## Resume reconciliation, checkpoint 519d92d
+
+The working tree was clean on resume. The production database DOES exist locally:
+435,702 accepted taxa, 999,746 linked aliases, 435,702 taxonomy-only descriptions.
+Previous LT 2027 Core Console runs passed core QA, smoke, project lifecycle,
+source-independent variants, backup recovery, branched graph and pressure tests.
+WFO name search measured 484 ms once. DCL load returned -1 in Core Console;
+GUI rendering and interaction are not verified.
+
+| Capability | Stale matrix | Actual code | Remaining integration/UX/test/docs |
+|---|---|---|---|
+| Plant manager | MISSING | DCL browser/editor exists | GUI acceptance; retain filters after actions |
+| Variants | one master per project | project IDs unique, master IDs may repeat | CLI Add and write-wide code guards |
+| Duplicate code | MISSING | DCL save guard | CLI/import/verification coverage |
+| Polygon fill | MISSING | bounded seeded XY fill | GUI/Undo/curved-boundary acceptance |
+| Select Similar / Count Selected | PARTIAL/MISSING | commands loaded | document and add acceptance |
+| Directed graph / pressure / critical path | MISSING | operation-local graph and command | broaden pure QA and integration |
+| Pipe reversal / tolerance | MISSING/fixed | commands loaded | documentation and acceptance |
+| Recovery | automatic backup only | deliberate recovery command | more failure/UUID tests and docs |
+| Open database | whole-file index | real sharded build installed | checksums/package/search ranking tests |
+
+Remaining queue includes labels/schedules/styles, module managers, layer roles,
+irrigation classes/sizing/stations/controllers, migration/portability, expanded QA,
+60-90 acceptance scenarios, and truthful final parity/release documentation.
+
+## Original audit findings (resolved items retained as history)
 
 - Palette source independence exists, but duplicate MASTER_PLANT_ID validation
   still blocks deliberate project variants.
@@ -34,5 +59,5 @@ inferred from static checks. Existing source-independent project copies must sur
 
 ## Verification
 
-No new implementation tests have run yet. Optional build tooling may use Node.js;
-AutoCAD LT runtime must remain AutoLISP/DCL only.
+Optional build tooling may use Node.js; AutoCAD LT runtime remains AutoLISP/DCL.
+Continue from this checkpoint, do not restart or discard working systems.

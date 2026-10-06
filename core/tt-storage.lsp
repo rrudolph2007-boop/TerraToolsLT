@@ -18,6 +18,13 @@
   )
 )
 
+(defun TT:StorageAbsolutePathP (path / normalized)
+  (setq normalized (TT:StorageNormalizePath path))
+  (and (eq (type normalized) 'STR)
+    (or (and (>= (strlen normalized) 3) (= (substr normalized 2 2) ":/")
+             (wcmatch (strcase (substr normalized 1 1)) "[A-Z]"))
+        (and (> (strlen normalized) 4) (= (substr normalized 1 2) "//")))))
+
 (defun TT:StorageJoinPath (directory filename / normalized last-character)
   (setq normalized (TT:StorageNormalizePath directory))
   (if (or (null normalized) (equal normalized ""))

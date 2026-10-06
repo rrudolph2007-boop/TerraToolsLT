@@ -63,9 +63,11 @@
                       "core/tt-project.lsp"
                       "core/tt-recovery.lsp"
                       "core/tt-preferences.lsp"
+                      "core/tt-layer-roles.lsp"
                       "core/tt-scale.lsp"
                       "core/tt-units.lsp"
                       "core/tt-data.lsp"
+                      "core/tt-migration.lsp"
                       "core/tt-csv.lsp"
                       "core/tt-standards.lsp"
                       "core/tt-smart.lsp"
@@ -90,9 +92,19 @@
                       "core/tt-debug.lsp"
                       "core/tt-dev.lsp"
                       "core/tt-qa.lsp"
+                      "core/tt-qa-network.lsp"
                       "core/tt-help.lsp"
                       "planting/tt-plant-ui.lsp"
-                      "core/tt-ui.lsp")
+                      "core/tt-ui.lsp"
+                      "core/tt-record-ui.lsp"
+                      "core/tt-manager-actions.lsp"
+                      "core/tt-library.lsp"
+                      "core/tt-managers.lsp"
+                      "schedules/tt-styles.lsp"
+                      "planting/tt-plant-production.lsp"
+                      "core/tt-package.lsp"
+                      "irrigation/tt-pipe-classes.lsp"
+                      "irrigation/tt-irrigation-tools.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
       ;; names that could resolve to files in another support directory.

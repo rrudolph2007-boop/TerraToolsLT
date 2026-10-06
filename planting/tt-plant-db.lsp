@@ -181,19 +181,11 @@
 )
 
 (defun TT:PlantMasterGetAll (/ catalog plants user-plants external-plants)
-  (setq catalog (TT:PlantMasterLoad))
-  (if catalog
-    (progn
-      (setq plants (TT:PlantMasterCatalogValue catalog 'PLANTS)
-            user-plants (if (and (boundp '*TT:PlantSearchModuleLoaded*)
-                                 *TT:PlantSearchModuleLoaded*)
-                          (TT:PlantUserGetAll))
-            external-plants (if (and (boundp '*TT:PlantSearchModuleLoaded*)
-                                     *TT:PlantSearchModuleLoaded*)
-                              (TT:PlantExternalGetAll)))
-      (append plants user-plants external-plants))
-    nil)
-)
+  (setq catalog (TT:PlantMasterLoad)
+        plants (if catalog (TT:PlantMasterCatalogValue catalog 'PLANTS)))
+  (if (and (boundp '*TT:PlantSearchModuleLoaded*) *TT:PlantSearchModuleLoaded*)
+    (setq user-plants (TT:PlantUserGetAll) external-plants (TT:PlantExternalGetAll)))
+  (append plants user-plants external-plants))
 
 (defun TT:PlantMasterFindByIDInList (plants plant-id / record found)
   (if (eq (type plant-id) 'STR)

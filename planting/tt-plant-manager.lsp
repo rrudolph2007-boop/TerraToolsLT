@@ -2,6 +2,13 @@
 
 (setq *TT:PlantPaletteSchemaVersion* 1)
 
+(defun TT:PlantDuplicateCodes (palette / seen duplicates record code)
+  (foreach record (TT:PlantPaletteGetAllFromPalette palette)
+    (setq code (strcase (vl-string-trim " " (TT:DataValue record 'PLANT_CODE))))
+    (if (member code seen) (setq duplicates (cons code duplicates))
+      (setq seen (cons code seen))))
+  (reverse duplicates))
+
 (defun TT:PlantPaletteValue (palette key / pair)
   (if (and (eq (type palette) 'LIST) (eq (type (cdr palette)) 'LIST))
     (setq pair (assoc key (cdr palette)))
@@ -188,6 +195,8 @@
         (TT:PlantSetError
           "No TerraTools project is associated with this drawing.")))
     ((not (TT:PlantPaletteValidate palette)) nil)
+    ((TT:PlantDuplicateCodes palette)
+      (TT:PlantSetError "Project plant codes must be unique. Edit the duplicate codes before saving."))
     (T
       (setq updated (TT:ProjectWithValue project 'PLANT_PALETTE palette))
       (if (TT:ProjectSave updated *TT:CurrentProjectPath*)
@@ -427,8 +436,13 @@
             plant-id (TT:PlantRecordValue master 'PLANT_ID))
       (if (TT:PlantPaletteFindByMasterID plants plant-id)
         (progn
-          (princ "\nThat Master Plant is already in the Project Plant Palette.")
-          nil)
+          (setq new-record (TT:PlantProjectRecordFromMaster master)
+                plant-id (getstring T "\nThis source is already used. Enter a distinct project code for a new variant <cancel>: "))
+          (if (/= (vl-string-trim " " plant-id) "")
+            (progn
+              (setq new-record (TT:DataPut new-record 'PLANT_CODE (vl-string-trim " " plant-id)))
+              (if (TT:PlantPaletteSave (TT:PlantPaletteWithPlants palette (append plants (list new-record))))
+                new-record (progn (TT:PlantPrintError) nil)))))
         (progn
           (setq new-record (TT:PlantProjectRecordFromMaster master)
                 palette (TT:PlantPaletteWithPlants palette

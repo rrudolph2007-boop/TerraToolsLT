@@ -2,6 +2,13 @@
 
 (setq *TT:HydraulicsModuleLoaded* T)
 
+(defun TT:PipeInsideDiameter (metadata / actual)
+  ;; All stored pipe diameters are inches. Legacy DIAMETER_IN remains a fallback.
+  (setq actual (assoc 'INSIDE_DIAMETER metadata))
+  (if actual (cdr actual) (cdr (assoc 'DIAMETER_IN metadata))))
+
+(defun TT:PSIToFeetHead (psi) (if (numberp psi) (* psi 2.31)))
+
 (defun TT:HydraulicVelocityFPS (flow-gpm diameter-in)
   (if (and (numberp flow-gpm) (>= flow-gpm 0.0)
            (numberp diameter-in) (> diameter-in 0.0))

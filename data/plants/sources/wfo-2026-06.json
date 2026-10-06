@@ -1,0 +1,14 @@
+{
+  "source": "World Flora Online Plant List",
+  "version": "2026-06",
+  "landing_page": "https://zenodo.org/records/20782718",
+  "download": "https://zenodo.org/api/records/20782718/files/_DwC_backbone_R.zip/content",
+  "license": "CC0-1.0",
+  "license_evidence": "Zenodo record metadata.license.id = cc-zero",
+  "attribution": "The World Flora Online Consortium (2026)",
+  "archive_sha256": "ccfc7e3ca85c8b80aa96eb52d4e50e07e1811d28916b544280d8a4f1a043ba72",
+  "classification_sha256": "87f52724e12c5be2cf954cb48910e226ae1b2ec686da6ce65ea3453e6143aefb",
+  "retrieved": "2026-10-06",
+  "included": "Accepted species, subspecies, varieties and forms; linked synonym names",
+  "excluded": "Unresolved names, higher ranks, source prose, photographs and horticultural inference"
+}

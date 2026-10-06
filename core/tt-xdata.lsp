@@ -35,6 +35,11 @@
     ((eq key 'DIAMETER_IN) "diameter_in")
     ((eq key 'C_FACTOR) "c_factor")
     ((eq key 'MANUAL_SIZE) "manual_size")
+    ((eq key 'COVERAGE_RADIUS) "coverage_radius")
+    ((eq key 'COVERAGE_SWEEP) "coverage_sweep")
+    ((eq key 'PRESSURE_PSI) "pressure_psi")
+    ((eq key 'INSIDE_DIAMETER) "inside_diameter")
+    ((eq key 'PIPE_CLASS) "pipe_class")
     (T nil)
   )
 )
@@ -54,6 +59,11 @@
     ((equal name "diameter_in") 'DIAMETER_IN)
     ((equal name "c_factor") 'C_FACTOR)
     ((equal name "manual_size") 'MANUAL_SIZE)
+    ((equal name "coverage_radius") 'COVERAGE_RADIUS)
+    ((equal name "coverage_sweep") 'COVERAGE_SWEEP)
+    ((equal name "pressure_psi") 'PRESSURE_PSI)
+    ((equal name "inside_diameter") 'INSIDE_DIAMETER)
+    ((equal name "pipe_class") 'PIPE_CLASS)
     (T nil)
   )
 )
@@ -69,8 +79,8 @@
 
 (defun TT:XDataMetadataValidP (metadata / item keys numeric-keys valid)
   (setq valid (TT:XDataStringValueP (cdr (assoc 'ENTITY_UUID metadata)))
-        keys '(PROJECT_UUID MODULE OBJECT_TYPE CATALOG_ID WORK_AREA_ID CIRCUIT STATION)
-        numeric-keys '(CAPACITY_WATTS FLOW_GPM DIAMETER_IN C_FACTOR MANUAL_SIZE))
+        keys '(PROJECT_UUID MODULE OBJECT_TYPE CATALOG_ID WORK_AREA_ID CIRCUIT STATION PIPE_CLASS)
+        numeric-keys '(CAPACITY_WATTS FLOW_GPM DIAMETER_IN COVERAGE_RADIUS INSIDE_DIAMETER C_FACTOR MANUAL_SIZE))
   (while (and valid keys)
     (setq item (assoc (car keys) metadata))
     (if (and item (not (TT:XDataStringValueP (cdr item))))
@@ -105,7 +115,7 @@
                 (cons 1070 *TT:XDataSchemaVersion*))
         keys '(ENTITY_UUID PROJECT_UUID MODULE OBJECT_TYPE
                CATALOG_ID WORK_AREA_ID CIRCUIT CAPACITY_WATTS STATION
-               FLOW_GPM DIAMETER_IN C_FACTOR MANUAL_SIZE))
+               FLOW_GPM DIAMETER_IN COVERAGE_RADIUS INSIDE_DIAMETER PIPE_CLASS C_FACTOR MANUAL_SIZE))
   (while keys
     (setq app-data (TT:XDataAppendField app-data (car keys) metadata)
           keys (cdr keys))

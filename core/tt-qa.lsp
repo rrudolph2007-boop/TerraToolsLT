@@ -73,6 +73,7 @@
   (if (not (TT:QALine (TT:QAApprox value 2.6155717762 1e-6)
                            "Lighting: copper voltage drop" "2.615572 V" (rtos value 2 6)))
     (setq passed nil))
+  (if (not (TT:QAExtended)) (setq passed nil))
   (princ (strcat "\n\nQA check: " (if passed "PASS" "FAIL")))
   (princ))
 

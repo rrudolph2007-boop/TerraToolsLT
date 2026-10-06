@@ -21,7 +21,7 @@
   (setq records (TT:Details project) problems 0)
   (foreach record records
     (setq number (strcase (TT:DataValue record 'NUMBER))
-          source (TT:DataValue record 'SOURCE_FILE))
+          source (TT:ProjectResourcePath (TT:DataValue record 'SOURCE_FILE)))
     (if (member number numbers)
       (progn (setq problems (1+ problems))
              (princ (strcat "\n  Duplicate detail number: " number)))
@@ -34,7 +34,7 @@
                  (if (= problems 0) "PASS" (strcat "FAIL, " (itoa problems) " issue(s)"))))
   problems)
 
-(defun C:TTDETAILS (/ *error* project option number title notes category keywords source record records selected updated answer dependencies)
+(defun C:TTDETAILSCLI (/ *error* project option number title notes category keywords source record records selected updated answer dependencies)
   (defun *error* (message) (TT:ReportError "TTDETAILS" message))
   (setq project (TT:ProjectCurrent))
   (if project

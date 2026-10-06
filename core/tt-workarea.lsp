@@ -115,7 +115,7 @@
                      " object(s). REGEN clears highlighting."))))
   (princ))
 
-(defun C:TTWORKAREAS (/ *error* project option)
+(defun C:TTWORKAREASCLI (/ *error* project option)
   (defun *error* (message) (TT:ReportError "TTWORKAREAS" message))
   (setq project (TT:ProjectCurrent))
   (if (null project)

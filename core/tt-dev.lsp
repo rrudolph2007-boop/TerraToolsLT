@@ -287,7 +287,9 @@
     (if (not (TT:DevSmokeCheck (TT:PlantDatabaseManifest) "Open database manifest" "Manifest is invalid."))
       (setq passed nil))
     (TT:DevSmokeSkip "Open database" "Optional database package is not installed."))
-  (princ (strcat "\n\nSmoke test: " (if passed "PASS" "FAIL")))
+  (princ (strcat "\nOptional Production Plant Database: "
+    (if (TT:PlantDatabaseManifest) "INSTALLED (manifest checked)" "NOT INSTALLED")))
+  (princ (strcat "\n\nCore Smoke: " (if passed "PASS" "FAIL")))
   (princ)
 )
 

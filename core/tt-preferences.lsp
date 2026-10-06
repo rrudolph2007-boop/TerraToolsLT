@@ -31,7 +31,7 @@
     (T nil))
 )
 
-(defun TT:DefaultLayerPreferences ()
+(defun TT:BaseLayerPreferences ()
   (list
     (list 'TREE
           (cons 'NAME "TT-TREE")
@@ -287,12 +287,15 @@
         nil)))
 )
 
-(defun TT:GetLayerRecordForRole (role / preferences layers)
+(defun TT:GetLayerRecordForRole (role / preferences layers record alias)
   (setq preferences (TT:LoadPreferences))
   (if preferences
     (progn
       (setq layers (TT:PreferencesValue preferences 'LAYERS))
-      (assoc role layers))
+      (setq alias (cdr (assoc role '((PLANT_TREE . TREE) (PLANT_SHRUB . SHRUB)
+                                    (PLANT_GROUNDCOVER . GROUNDCOVER) (HELPER_NONPLOT . HELPER_NPLT)))))
+      (if alias (setq role alias))
+      (if (setq record (assoc role layers)) record (TT:ModuleLayerDefault role)))
     nil)
 )
 
@@ -305,15 +308,16 @@
   (setq preferences (TT:LoadPreferences))
   (cond
     ((null preferences) nil)
-    ((not (member role *TT:LayerRoles*))
+    ((not (or (member role *TT:LayerRoles*) (TT:ModuleLayerDefault role)))
       (TT:PreferencesSetError "Unknown TerraTools logical layer role."))
     ((not (TT:ValidLayerNameP name))
       (TT:PreferencesSetError (strcat "Invalid layer name: " name)))
     (T
       (setq layers (TT:PreferencesValue preferences 'LAYERS)
-            record (assoc role layers)
+            record (TT:GetLayerRecordForRole role)
             updated-record (TT:LayerPut record 'NAME name)
-            layers (subst updated-record record layers)
+            layers (if (assoc role layers) (subst updated-record (assoc role layers) layers)
+                     (append layers (list updated-record)))
             preferences (TT:PreferencesPut preferences 'LAYERS layers))
       (TT:SavePreferences preferences)))
 )
