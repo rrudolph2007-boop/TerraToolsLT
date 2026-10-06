@@ -20,10 +20,17 @@ AutoCAD LT 2024 or newer on Windows.
 
 ## Core Scaffold 0.1.0
 
-`TerraTools.lsp` loads the four modules in `core/`. This milestone provides
+`TerraTools.lsp` loads the modules in `core/`. The scaffold provides
 `TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
-It does not create drawing entities, change system variables, or write project
-data. No external runtime or compiled extension is required.
+The UUID/XData foundation adds `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`, and
+`TTUNTAGTEST`. It does not create drawing entities, change system variables, or
+write project data. No external runtime or compiled extension is required.
+
+TerraTools smart-entity metadata uses the registered XData application
+`TERRATOOLS`. Schema version 1 stores a `TT_ENTITY` marker, the schema version,
+and named string fields for entity UUID, project UUID, module, object type,
+catalog ID, and Work Area ID. Fields without values are omitted. Project and
+catalog records are not stored in XData.
 
 ### Load in AutoCAD LT
 

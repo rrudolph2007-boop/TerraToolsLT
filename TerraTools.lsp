@@ -37,6 +37,8 @@
             modules '("core/tt-errors.lsp"
                       "core/tt-utils.lsp"
                       "core/tt-core.lsp"
+                      "core/tt-uuid.lsp"
+                      "core/tt-xdata.lsp"
                       "core/tt-debug.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module

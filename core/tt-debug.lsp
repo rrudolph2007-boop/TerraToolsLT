@@ -14,6 +14,8 @@
   (TT:PrintValue "Current layer" (getvar "CLAYER"))
   (TT:PrintValue "INSUNITS" (getvar "INSUNITS"))
   (TT:PrintValue "Core loaded successfully" (if *TT:CoreLoaded* "Yes" "No"))
+  (TT:PrintValue "TERRATOOLS XData application registered"
+                 (if (TT:XDataAppRegisteredP) "Yes" "No"))
   (princ)
 )
 
