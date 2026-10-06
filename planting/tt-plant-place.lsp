@@ -74,7 +74,7 @@
   (princ)
 )
 
-(defun C:TTPLANTINFO (/ *error* item metadata record)
+(defun C:TTPLANTINFO (/ *error* item metadata record source)
   (defun *error* (message) (TT:ReportError "TTPLANTINFO" message))
   (setq item (TT:SelectSmartEntity "\nSelect smart plant: "))
   (if (and item (equal (cdr (assoc 'OBJECT_TYPE (cdr item))) "PLANT_INSTANCE"))
@@ -82,7 +82,15 @@
       (setq metadata (cdr item)
             record (TT:PlantFindProjectByID (cdr (assoc 'CATALOG_ID metadata))))
       (if record
-        (TT:PlantPrintProjectRecord record)
+        (progn
+          (TT:PlantPrintProjectRecord record)
+          (setq source (TT:PlantProjectSourceRecord record))
+          (TT:PrintValue "Source status"
+            (if source "SOURCE AVAILABLE" "SOURCE UNAVAILABLE"))
+          (if (and source (TT:PlantRecordValue source 'CATEGORY)
+                   (not (eq (TT:PlantRecordValue record 'CATEGORY)
+                            (TT:PlantRecordValue source 'CATEGORY))))
+            (TT:PrintValue "Source warning" "CATEGORY MISMATCH")))
         (princ "\nThe plant references a missing Project Plant record."))
       (TT:PrintValue "Entity UUID" (cdr (assoc 'ENTITY_UUID metadata)))
       (TT:PrintValue "Work Area ID" (cdr (assoc 'WORK_AREA_ID metadata))))

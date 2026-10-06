@@ -150,46 +150,50 @@ Run these tests in AutoCAD LT 2024 or newer on Windows. Use disposable DWGs and 
 
 **Setup:** Copy a normalized plant file and damage its envelope or a required identity. **Actions:** Attach it with `TTPLANTDATA`. **Expected:** the file is rejected as invalid or empty. **Pass:** the Project Palette and existing attachment list remain unchanged.
 
-## 38. Office standards exchange
+## 38. Project Plant source independence
+
+**Setup:** Create a normalized external catalog containing a uniquely identified plant, attach it with `TTPLANTDATA`, add that plant to the Project Plant Palette, and place one instance. **Actions:** Record the Project Plant ID; detach the external catalog; run `TTRELOAD`, `TTPLANTS` List, `TTPLANTINFO`, and `TTVERIFYPLANTS`; then reattach the same catalog and repeat the information and verification commands. **Expected:** after detach, the palette loads, the placed instance still resolves through the unchanged Project Plant ID, project edits remain intact, and diagnostics report `SOURCE UNAVAILABLE`; after reattach, diagnostics report `SOURCE AVAILABLE` without migration. **Pass:** detaching changes only `PLANT_DATA_PATHS`; it does not delete, recreate, or alter the Project Plant or placed entity.
+
+## 39. Office standards exchange
 
 **Setup:** Active project with changed preferences. **Actions:** `TTSTANDARDS` SaveUser, reset project preferences, ApplyUser, Export, then Import the export into another project. **Expected:** validation succeeds and preferences match. **Pass:** existing preference schema remains version 1 and unrelated project fields survive.
 
-## 39. Work Area lifecycle
+## 40. Work Area lifecycle
 
 **Setup:** Two Work Areas, one with assigned objects and one empty. **Actions:** `TTWORKAREAS` Rename, Highlight, Count; attempt to delete both. **Expected:** the dependent area cannot be deleted; the empty area and boundary can be deleted after confirmation. **Pass:** failed project storage restores a boundary deleted during the attempted transaction.
 
-## 40. Reference note Work Area and cost
+## 41. Reference note Work Area and cost
 
 **Setup:** Reference-note objects split between two Work Areas with unit costs. **Actions:** Create an all-project and a Work Area schedule, edit a code/cost, then update the schedule. **Expected:** scoped quantities and subtotals match assignments and current geometry. **Pass:** curved area/length quantities use bulge-aware geometry.
 
-## 41. Detail validation
+## 42. Detail validation
 
 **Setup:** Add details with categories, keywords, and one source DWG. **Actions:** Attempt a duplicate number, rename the source file, run Verify, and try removing a placed detail. **Expected:** duplicate Add is refused, missing file is reported, and referenced removal is refused. **Pass:** restoring the source path clears the file issue.
 
-## 42. Lighting transformer capacity
+## 43. Lighting transformer capacity
 
 **Setup:** Assign fixtures and a transformer to one circuit. **Actions:** Run `TTTRANSFORMERLOAD` below and above capacity, then `TTVERIFYLIGHTING`. **Expected:** load, capacity, spare watts, and PASS/FAIL are correct. **Pass:** overload is reported without changing entities.
 
-## 43. Lighting voltage drop
+## 44. Lighting voltage drop
 
 **Setup:** Prepare a hand calculation using 100 W, 12 V, 50 ft one-way, and supported copper AWG. **Actions:** Run `TTVOLTAGEDROP`. **Expected:** result matches `2 K I L / CM` with K=12.9 and reports percentage. **Pass:** unsupported AWG and zero voltage are rejected.
 
-## 44. Branched per-pipe irrigation flow
+## 45. Branched per-pipe irrigation flow
 
 **Setup:** Build one upstream pipe that branches to 3 gpm and 5 gpm heads. **Actions:** Analyze and size each branch and upstream pipe. **Expected:** branch flows are 3 and 5 gpm; upstream flow is 8 gpm. **Pass:** pipe sizing uses those three different flows.
 
-## 45. Merged-path irrigation ambiguity
+## 46. Merged-path irrigation ambiguity
 
 **Setup:** Draw two directed pipes merging into one downstream node for a station. **Actions:** Analyze, size a pipe, and run a selected critical path. **Expected:** merged-node count is positive and sizing/path calculations stop with an ambiguity message. **Pass:** no diameter is silently changed.
 
-## 46. Foreign-project copy detection
+## 47. Foreign-project copy detection
 
 **Setup:** Copy or WBLOCK a smart entity from project A into a DWG associated with project B. **Actions:** Run `TTVERIFY` and `TTRECONCILE`. **Expected:** verification reports a foreign project UUID; reconciliation only repairs duplicate entity UUIDs. **Pass:** TerraTools does not silently adopt or rewrite the foreign catalog identity.
 
-## 47. CSV parser edge cases
+## 48. CSV parser edge cases
 
 **Setup:** Prepare an import CSV with commas, doubled quotes, blank fields, headers, and non-ASCII text. **Actions:** Run `TTQACHECK` and the relevant import in each supported `LISPSYS` setting. **Expected:** structural fields parse correctly; unsupported encoding is reported or documented. **Pass:** no existing record is silently overwritten.
 
-## 48. Large catalog and drawing performance
+## 49. Large catalog and drawing performance
 
 **Setup:** Attach a legitimate large normalized catalog and prepare drawings with about 1,000, 5,000, and 10,000 smart entities. **Actions:** Time first and repeated plant searches, `TTVERIFY`, and representative schedules. **Expected:** first search builds the index; repeated searches reuse it; drawing scans complete without nested-scan stalls. **Pass:** results stay correct and AutoCAD LT remains responsive enough for review.

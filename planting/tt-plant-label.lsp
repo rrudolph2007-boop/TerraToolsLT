@@ -106,12 +106,16 @@
 )
 
 (defun TT:VerifyPlants (/ items palette project-ids record item metadata missing malformed labels invalid-labels
-                        missing-symbols invalid-work-areas project reconcile block work-area-id)
+                        missing-symbols invalid-work-areas project reconcile block work-area-id
+                        source-report)
   (setq project (TT:ProjectCurrent))
   (setq palette (TT:PlantPaletteLoad))
   (if palette
-    (foreach record (TT:PlantPaletteGetAllFromPalette palette)
-      (setq project-ids (cons (TT:PlantRecordValue record 'PROJECT_PLANT_ID) project-ids))))
+    (progn
+      (setq source-report (TT:PlantPaletteSourceReport palette))
+      (foreach record (TT:PlantPaletteGetAllFromPalette palette)
+        (setq project-ids
+          (cons (TT:PlantRecordValue record 'PROJECT_PLANT_ID) project-ids)))))
   (setq items (TT:SmartFilter (TT:SmartScan) "PLANTING" nil))
   (foreach item items
     (setq metadata (cdr item))
@@ -136,6 +140,13 @@
         (cons 'INVALID_LABELS (if invalid-labels invalid-labels 0))
         (cons 'MISSING_SYMBOLS (if missing-symbols missing-symbols 0))
         (cons 'INVALID_WORK_AREAS (if invalid-work-areas invalid-work-areas 0))
+        (cons 'SOURCE_AVAILABLE
+              (if source-report (cdr (assoc 'SOURCE_AVAILABLE source-report)) 0))
+        (cons 'SOURCE_UNAVAILABLE
+              (if source-report (cdr (assoc 'SOURCE_UNAVAILABLE source-report)) 0))
+        (cons 'SOURCE_CATEGORY_MISMATCH
+              (if source-report
+                (cdr (assoc 'SOURCE_CATEGORY_MISMATCH source-report)) 0))
         (cons 'DUPLICATE_UUIDS (cdr (assoc 'DUPLICATES reconcile))))
 )
 
@@ -149,6 +160,10 @@
   (TT:PrintValue "Invalid labels" (cdr (assoc 'INVALID_LABELS report)))
   (TT:PrintValue "Missing symbol definitions" (cdr (assoc 'MISSING_SYMBOLS report)))
   (TT:PrintValue "Invalid Work Area references" (cdr (assoc 'INVALID_WORK_AREAS report)))
+  (TT:PrintValue "Source available" (cdr (assoc 'SOURCE_AVAILABLE report)))
+  (TT:PrintValue "Source unavailable" (cdr (assoc 'SOURCE_UNAVAILABLE report)))
+  (TT:PrintValue "Source category mismatch"
+                 (cdr (assoc 'SOURCE_CATEGORY_MISMATCH report)))
   (TT:PrintValue "Duplicate UUIDs" (cdr (assoc 'DUPLICATE_UUIDS report)))
   (princ)
 )

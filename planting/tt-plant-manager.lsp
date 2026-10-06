@@ -67,8 +67,7 @@
 )
 
 (defun TT:PlantPaletteValidateWorker
-  (palette / plants masters project-ids master-ids record project-id
-             master-id master valid)
+  (palette / plants project-ids master-ids record project-id master-id valid)
   (setq *TT:PlantLastError* nil)
   (cond
     ((or (not (eq (type palette) 'LIST))
@@ -82,10 +81,6 @@
     ((not (or (null (TT:PlantPaletteValue palette 'PLANTS))
               (eq (type (TT:PlantPaletteValue palette 'PLANTS)) 'LIST)))
       (TT:PlantSetError "The Project Plant Palette plant list is malformed."))
-    ((null (setq masters (TT:PlantMasterGetAll)))
-      (if (null *TT:PlantLastError*)
-        (TT:PlantSetError "The Master Plant Catalog contains no plants."))
-      nil)
     (T
       (setq plants (TT:PlantPaletteValue palette 'PLANTS)
             project-ids nil
@@ -99,8 +94,7 @@
             (setq project-id
                     (strcase (TT:PlantRecordValue record 'PROJECT_PLANT_ID))
                   master-id
-                    (strcase (TT:PlantRecordValue record 'MASTER_PLANT_ID))
-                  master (TT:PlantMasterFindByIDInList masters master-id))
+                    (strcase (TT:PlantRecordValue record 'MASTER_PLANT_ID)))
             (cond
               ((member project-id project-ids)
                 (TT:PlantSetError
@@ -112,23 +106,52 @@
                   (strcat "The Project Plant Palette contains duplicate master plant ID: "
                           master-id))
                 (setq valid nil))
-              ((null master)
-                (TT:PlantSetError
-                  (strcat "A Project Plant record references missing master plant ID: "
-                          master-id))
-                (setq valid nil))
-              ((and (TT:PlantRecordValue master 'CATEGORY)
-                    (not (eq (TT:PlantRecordValue record 'CATEGORY)
-                             (TT:PlantRecordValue master 'CATEGORY))))
-                (TT:PlantSetError
-                  (strcat "A Project Plant category does not match master plant ID: "
-                          master-id))
-                (setq valid nil))
               (T
                 (setq project-ids (cons project-id project-ids)
                       master-ids (cons master-id master-ids))))))
         (setq plants (cdr plants)))
       valid))
+)
+
+(defun TT:PlantProjectSourceRecord (record / prior-error source)
+  ;; Source lookup is diagnostic only. Project Plant data remains authoritative.
+  (setq prior-error *TT:PlantLastError*
+        source (TT:PlantMasterFindByID
+                 (TT:PlantRecordValue record 'MASTER_PLANT_ID))
+        *TT:PlantLastError* prior-error)
+  source
+)
+
+(defun TT:PlantProjectSourceStatus (record)
+  (if (TT:PlantProjectSourceRecord record)
+    "SOURCE AVAILABLE"
+    "SOURCE UNAVAILABLE")
+)
+
+(defun TT:PlantPaletteSourceReport
+  (palette / prior-error masters record source available unavailable mismatch)
+  (setq prior-error *TT:PlantLastError*
+        masters (TT:PlantMasterGetAll)
+        available 0
+        unavailable 0
+        mismatch 0)
+  (foreach record (TT:PlantPaletteGetAllFromPalette palette)
+    (setq source
+      (if masters
+        (TT:PlantMasterFindByIDInList
+          masters (TT:PlantRecordValue record 'MASTER_PLANT_ID))))
+    (if source
+      (progn
+        (setq available (1+ available))
+        (if (and (TT:PlantRecordValue source 'CATEGORY)
+                 (not (eq (TT:PlantRecordValue record 'CATEGORY)
+                          (TT:PlantRecordValue source 'CATEGORY))))
+          (setq mismatch (1+ mismatch))))
+      (setq unavailable (1+ unavailable))))
+  (setq *TT:PlantLastError* prior-error)
+  (list (cons 'SOURCE_AVAILABLE available)
+        (cons 'SOURCE_UNAVAILABLE unavailable)
+        (cons 'SOURCE_CATEGORY_MISMATCH mismatch))
 )
 
 (defun TT:PlantPaletteValidate (palette / result)

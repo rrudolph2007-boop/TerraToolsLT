@@ -344,7 +344,8 @@
       (cons 'NOTES "Imported fields only; TerraTools category requires user classification."))))
 
 (defun C:TTIMPORTUSDA (/ source destination rows map records row record catalog)
-  (setq source (getfiled "Select comma-delimited USDA PLANTS checklist" "" "txt" 0))
+  ;; An empty extension shows all file types, including normal .csv and USDA .txt files.
+  (setq source (getfiled "Select USDA PLANTS CSV or text checklist" "" "" 0))
   (if source
     (progn
       (princ "\nReading USDA source file...")
@@ -412,11 +413,13 @@
                 (mapcar '(lambda (value) (list 'PLANT_DATA_PATH (cons 'PATH value))) paths)
                 '(lambda (record) (TT:DataValue record 'PATH)) "Select catalog number"))
               (if path
-                (progn
-                  (TT:ProjectSaveSection 'PLANT_DATA_PATHS
-                    (vl-remove (TT:DataValue path 'PATH) paths))
-                  (setq *TT:PlantSearchIndex* nil)
-                  (princ "\nPlant catalog detached. The source file was not deleted."))))))))
+                (if (TT:ProjectSaveSection 'PLANT_DATA_PATHS
+                      (vl-remove (TT:DataValue path 'PATH) paths))
+                  (progn
+                    (setq *TT:PlantSearchIndex* nil)
+                    (princ
+                      "\nPlant catalog detached. Project Plant copies remain available; the source file was not deleted."))
+                  (princ "\nPlant catalog could not be detached."))))))))
     (princ "\nNo TerraTools project is associated with this drawing."))
   (princ))
 
