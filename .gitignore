@@ -1,0 +1,26 @@
+# AutoCAD temporary / recovery files
+*.bak
+*.sv$
+*.ac$
+*.dwl
+*.dwl2
+
+# Windows / macOS junk
+Thumbs.db
+.DS_Store
+
+# Temporary development files
+*.tmp
+*.temp
+*~
+
+# TerraTools runtime files
+logs/*.log
+
+# Local scratch/testing directories
+scratch/
+temp/
+
+# Secrets
+.env
+*.secret
