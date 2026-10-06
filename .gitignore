@@ -24,3 +24,7 @@ temp/
 # Secrets
 .env
 *.secret
+
+# AutoCAD crash / error-report artifacts
+acadlt.err
+ErrorReports/
