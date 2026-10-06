@@ -119,8 +119,8 @@
   (princ))
 
 (defun C:TTLIGHTING (/ option)
-  (initget "List Add Edit Remove Place Replace Info Wire Transformer Circuit Load Schedule Verify")
-  (setq option (getkword "\nLighting [List/Add/Edit/Remove/Place/Replace/Info/Wire/Transformer/Circuit/Load/Schedule/Verify] <List>: "))
+  (initget "List Add Edit Remove Place Replace Info Wire Transformer Circuit Load Capacity VoltageDrop Schedule Verify")
+  (setq option (getkword "\nLighting [List/Add/Edit/Remove/Place/Replace/Info/Wire/Transformer/Circuit/Load/Capacity/VoltageDrop/Schedule/Verify] <List>: "))
   (if (null option) (setq option "List"))
   (cond ((equal option "List") (TT:LightingList))
         ((equal option "Add") (TT:LightingPaletteAdd))
@@ -133,6 +133,8 @@
         ((equal option "Transformer") (C:TTTRANSFORMER))
         ((equal option "Circuit") (C:TTCIRCUITASSIGN))
         ((equal option "Load") (C:TTCIRCUITINFO))
+        ((equal option "Capacity") (C:TTTRANSFORMERLOAD))
+        ((equal option "VoltageDrop") (C:TTVOLTAGEDROP))
         ((equal option "Schedule") (C:TTLIGHTINGSCHEDULE))
         ((equal option "Verify") (C:TTVERIFYLIGHTING)))
   (princ))
@@ -181,7 +183,7 @@
   (princ))
 
 (defun C:TTCIRCUITASSIGN (/ item circuit data)
-  (setq item (TT:SelectSmartEntity "\nSelect lighting fixture or wire: "))
+  (setq item (TT:SelectSmartEntity "\nSelect lighting object: "))
   (if item
     (if (equal (cdr (assoc 'MODULE (cdr item))) "LIGHTING")
       (progn
@@ -243,8 +245,65 @@
                    (rtos watts 2 1) " connected watts.")))
   (princ))
 
+(defun TT:LightingCircuitLoad (circuit / item data record watts)
+  (setq watts 0.0)
+  (foreach item (TT:SmartFilter (TT:SmartScan) "LIGHTING" "FIXTURE")
+    (setq data (cdr item))
+    (if (equal circuit (cdr (assoc 'CIRCUIT data)))
+      (progn
+        (setq record (TT:LightingFixtureRecordForMetadata data))
+        (if record (setq watts (+ watts (TT:LightingValue record 'WATTAGE)))))))
+  watts)
+
+(defun TT:LightingTransformerCapacity (circuit / item metadata total)
+  (setq total 0.0)
+  (foreach item (TT:SmartFilter (TT:SmartScan) "LIGHTING" "TRANSFORMER")
+    (setq metadata (cdr item))
+    (if (equal circuit (cdr (assoc 'CIRCUIT metadata)))
+      (setq total (+ total (TT:SafeNumber (cdr (assoc 'CAPACITY_WATTS metadata)) 0.0)))))
+  total)
+
+(defun C:TTTRANSFORMERLOAD (/ circuit load capacity spare)
+  (setq circuit (getstring T "\nCircuit name: "))
+  (if (not (equal circuit ""))
+    (progn
+      (setq load (TT:LightingCircuitLoad circuit)
+            capacity (TT:LightingTransformerCapacity circuit)
+            spare (- capacity load))
+      (princ (strcat "\nCircuit " circuit
+                     "\n  Connected load: " (rtos load 2 1) " W"
+                     "\n  Assigned transformer capacity: " (rtos capacity 2 1) " W"
+                     "\n  Spare capacity: " (rtos spare 2 1) " W"
+                     "\n  Status: " (if (and (> capacity 0.0) (>= spare 0.0)) "PASS" "FAIL")))))
+  (princ))
+
+(defun TT:LightingAWGCircularMils (awg)
+  (cond ((= awg 18) 1620.0) ((= awg 16) 2580.0) ((= awg 14) 4110.0)
+        ((= awg 12) 6530.0) ((= awg 10) 10380.0) (T nil)))
+
+(defun TT:LightingVoltageDrop (watts voltage one-way-length awg / current cmil)
+  ;; Copper two-conductor estimate: Vd = 2 K I L / CM, K = 12.9 ohm-cmil/ft.
+  (setq cmil (if (numberp awg) (TT:LightingAWGCircularMils awg)))
+  (if (and (numberp watts) (>= watts 0.0) (numberp voltage) (> voltage 0.0)
+           (numberp one-way-length) (>= one-way-length 0.0) cmil)
+    (/ (* 2.0 12.9 (/ watts voltage) one-way-length) cmil)
+    nil))
+
+(defun C:TTVOLTAGEDROP (/ watts voltage length awg drop)
+  (setq watts (getreal "\nConnected load, watts: ")
+        voltage (if watts (getreal "\nSystem voltage: "))
+        length (if voltage (getreal "\nOne-way conductor length, feet: "))
+        awg (if length (getint "\nCopper conductor AWG [18/16/14/12/10]: "))
+        drop (if awg (TT:LightingVoltageDrop watts voltage length awg)))
+  (if drop
+    (princ (strcat "\nEstimated voltage drop: " (rtos drop 2 2) " V ("
+                   (rtos (* 100.0 (/ drop voltage)) 2 2) "%)."))
+    (if watts (princ "\nVoltage-drop inputs or conductor size are invalid.")))
+  (princ))
+
 (defun TT:LightingFixtureRecordForMetadata (metadata / project)
-  (setq project (TT:ProjectCurrent))
+  (setq project (if (and (boundp '*TT:CurrentProject*) *TT:CurrentProject*)
+                  *TT:CurrentProject* (TT:ProjectCurrent)))
   (if project (TT:LightingFind (TT:LightingPalette project)
                                (cdr (assoc 'CATALOG_ID metadata)))))
 
@@ -278,7 +337,7 @@
     (if (null rows) (princ "\nNo placed lighting fixtures were found.")))
   (princ))
 
-(defun C:TTVERIFYLIGHTING (/ project item metadata record problems watts)
+(defun C:TTVERIFYLIGHTING (/ project item metadata record problems watts circuit checked load capacity)
   (setq project (TT:ProjectCurrent) problems 0)
   (if project
     (foreach item (TT:SmartFilter (TT:SmartScan) "LIGHTING" nil)
@@ -295,7 +354,18 @@
                    (princ "\n  Fixture has no Project Fixture Palette record."))
             (progn (setq watts (TT:LightingValue record 'WATTAGE))
                    (if (or (not (numberp watts)) (< watts 0.0))
-                     (setq problems (1+ problems))))))))
+                     (setq problems (1+ problems)))))
+          (setq circuit (cdr (assoc 'CIRCUIT metadata)))
+          (if (and circuit (not (member circuit checked)))
+            (progn
+              (setq checked (cons circuit checked)
+                    load (TT:LightingCircuitLoad circuit)
+                    capacity (TT:LightingTransformerCapacity circuit))
+              (if (or (<= capacity 0.0) (> load capacity))
+                (progn
+                  (setq problems (1+ problems))
+                  (princ (strcat "\n  Circuit " circuit
+                                 " has no adequate assigned transformer capacity.")))))))))
     (princ "\nA TerraTools project must be active."))
   (if project (princ (strcat "\nLighting verification: "
                              (if (= problems 0) "PASS" (strcat "FAIL, " (itoa problems) " issue(s)")))))

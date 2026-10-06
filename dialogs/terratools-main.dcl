@@ -22,6 +22,14 @@ terratools_main : dialog {
     }
   }
   : boxed_column {
+    label = "Standards and Data";
+    : row {
+      : button { key = "standards"; label = "Standards..."; width = 16; }
+      : button { key = "data"; label = "Plant Data..."; width = 16; }
+      : button { key = "help"; label = "Help..."; width = 16; }
+    }
+  }
+  : boxed_column {
     label = "Support";
     : row {
       : button { key = "diagnostics"; label = "Diagnostics..."; width = 16; }

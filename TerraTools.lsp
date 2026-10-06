@@ -1,4 +1,4 @@
-;;; TerraTools LT 0.9.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
+;;; TerraTools LT 0.10.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
 ;;; Add the installation folder to the Support File Search Path, then APPLOAD
 ;;; this file. If it cannot be found there, select this file when prompted.
 ;;; The installation folder and loaded subfolders must be trusted by AutoCAD.
@@ -9,9 +9,10 @@
   ;; Localizing *error* restores the caller's handler when this function exits.
   (defun *error* (message)
     (setq *TT:CoreLoaded* nil)
-    (princ "\nTerraTools LT load failed")
-    (if module-path (princ (strcat " in " module-path)))
-    (princ (strcat ": " message))
+    (if module-name
+      (princ (strcat "\nTerraTools load failed in: " module-name))
+      (princ "\nTerraTools LT loader failed."))
+    (if message (princ (strcat "\nError: " message)))
     (princ)
   )
 
@@ -23,7 +24,7 @@
   (setq *TT:LoaderPathOverride* nil)
 
   ;; Clear readiness on every attempt, including a failed reload.
-  (setq *TT:Version* "0.9.0-rc1"
+  (setq *TT:Version* "0.10.0-rc1"
         *TT:CoreLoaded* nil
         *TT:PlantingModuleLoaded* nil
         *TT:SiteModuleLoaded* nil
@@ -62,10 +63,14 @@
                       "core/tt-project.lsp"
                       "core/tt-preferences.lsp"
                       "core/tt-scale.lsp"
+                      "core/tt-units.lsp"
                       "core/tt-data.lsp"
+                      "core/tt-csv.lsp"
+                      "core/tt-standards.lsp"
                       "core/tt-smart.lsp"
                       "planting/tt-plant-db.lsp"
                       "planting/tt-plant-manager.lsp"
+                      "planting/tt-plant-search.lsp"
                       "core/tt-reconcile.lsp"
                       "core/tt-workarea.lsp"
                       "planting/tt-plant-place.lsp"
@@ -79,6 +84,8 @@
                       "irrigation/tt-irrigation.lsp"
                       "core/tt-debug.lsp"
                       "core/tt-dev.lsp"
+                      "core/tt-qa.lsp"
+                      "core/tt-help.lsp"
                       "core/tt-ui.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
@@ -86,14 +93,15 @@
       (while (and ok modules)
         (setq module-name (car modules)
               module-path (strcat *TT:Root* "/" module-name))
+        (princ (strcat "\nTerraTools loading: " module-name))
         (cond
           ((not (findfile module-path))
             (setq ok nil)
-            (princ (strcat "\nTerraTools LT load failed: missing " module-path)))
+            (princ (strcat "\nTerraTools load failed in: " module-name
+                           "\nError: module file was not found.")))
           ((not (load module-path nil))
             (setq ok nil)
-            (princ (strcat "\nTerraTools LT load failed: could not load "
-                           module-path)))
+            (princ (strcat "\nTerraTools load failed in: " module-name)))
         )
         (setq modules (cdr modules))
       )

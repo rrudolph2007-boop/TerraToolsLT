@@ -6,29 +6,107 @@
 (defun TT:DetailLabel (record)
   (strcat (TT:DataValue record 'NUMBER) " | " (TT:DataValue record 'TITLE)))
 
-(defun C:TTDETAILS (/ *error* project option number title notes record records)
+(defun TT:DetailNumberExistsP (records number / record found)
+  (foreach record records
+    (if (equal (strcase number) (strcase (TT:DataValue record 'NUMBER))) (setq found T)))
+  found)
+
+(defun TT:DetailDependencyCount (detail-id / item count)
+  (setq count 0)
+  (foreach item (TT:SmartFilter (TT:SmartScan) "DETAILS" nil)
+    (if (equal detail-id (cdr (assoc 'CATALOG_ID (cdr item)))) (setq count (1+ count))))
+  count)
+
+(defun TT:DetailsVerify (project / records numbers record number problems source)
+  (setq records (TT:Details project) problems 0)
+  (foreach record records
+    (setq number (strcase (TT:DataValue record 'NUMBER))
+          source (TT:DataValue record 'SOURCE_FILE))
+    (if (member number numbers)
+      (progn (setq problems (1+ problems))
+             (princ (strcat "\n  Duplicate detail number: " number)))
+      (setq numbers (cons number numbers)))
+    (if (and (eq (type source) 'STR) (not (equal source ""))
+             (not (TT:StorageFileExistsP source)))
+      (progn (setq problems (1+ problems))
+             (princ (strcat "\n  Missing source file: " source)))))
+  (princ (strcat "\nDetail verification: "
+                 (if (= problems 0) "PASS" (strcat "FAIL, " (itoa problems) " issue(s)"))))
+  problems)
+
+(defun C:TTDETAILS (/ *error* project option number title notes category keywords source record records selected updated answer dependencies)
   (defun *error* (message) (TT:ReportError "TTDETAILS" message))
   (setq project (TT:ProjectCurrent))
   (if project
     (progn
-      (initget "List Add") (setq option (getkword "\nDetails [List/Add] <List>: "))
+      (initget "List Add Edit Remove Verify")
+      (setq option (getkword "\nDetails [List/Add/Edit/Remove/Verify] <List>: "))
       (if (null option) (setq option "List"))
-      (if (equal option "Add")
+      (cond
+       ((equal option "Add")
         (progn
           (setq number (getstring T "\nDetail number: ") title (getstring T "\nDetail title: ")
-                notes (getstring T "\nDetail notes <blank>: "))
-          (if (and (not (equal number "")) (not (equal title "")))
+                category (getstring T "\nCategory <blank>: ")
+                keywords (getstring T "\nKeywords <blank>: ")
+                notes (getstring T "\nDetail notes <blank>: ")
+                source (getfiled "Optional detail source drawing <Cancel for none>" "" "dwg" 0))
+          (cond
+           ((or (equal number "") (equal title ""))
+             (princ "\nDetail number and title are required."))
+           ((TT:DetailNumberExistsP (TT:Details project) number)
+             (princ "\nThat detail number is already in use."))
+           (T
             (progn
               (setq record (list 'DETAIL (cons 'DETAIL_ID (TT:GenerateUUID))
                              (cons 'NUMBER number) (cons 'TITLE title)
-                             (cons 'NOTES notes) (cons 'TEMPLATE "TT_DETAIL_FRAME"))
+                             (cons 'CATEGORY category) (cons 'KEYWORDS keywords)
+                             (cons 'NOTES notes) (cons 'SOURCE_FILE (if source source ""))
+                             (cons 'LIBRARY_SCOPE "PROJECT")
+                             (cons 'TEMPLATE "TT_DETAIL_FRAME"))
                     records (append (TT:Details project) (list record)))
-              (TT:ProjectSaveSection 'DETAIL_LIBRARY records)
-              (princ "\nDetail added."))))
+              (if (TT:ProjectSaveSection 'DETAIL_LIBRARY records)
+                (princ "\nDetail added.")
+                (princ "\nCould not save the detail record.")))))))
+       ((equal option "Edit")
+        (setq selected (TT:SelectDetail project))
+        (if selected
+          (progn
+            (setq updated selected title (getstring T "\nNew title <keep>: "))
+            (if (not (equal title "")) (setq updated (TT:DataPut updated 'TITLE title)))
+            (setq category (getstring T "\nNew category <keep>: "))
+            (if (not (equal category "")) (setq updated (TT:DataPut updated 'CATEGORY category)))
+            (setq keywords (getstring T "\nNew keywords <keep>: "))
+            (if (not (equal keywords "")) (setq updated (TT:DataPut updated 'KEYWORDS keywords)))
+            (setq notes (getstring T "\nNew notes <keep>: "))
+            (if (not (equal notes "")) (setq updated (TT:DataPut updated 'NOTES notes)))
+            (if (TT:ProjectSaveSection 'DETAIL_LIBRARY
+                  (subst updated selected (TT:Details project)))
+              (princ "\nDetail updated.")
+              (princ "\nCould not save the detail update.")))))
+       ((equal option "Remove")
+        (setq selected (TT:SelectDetail project))
+        (if selected
+          (progn
+            (setq dependencies (TT:DetailDependencyCount (TT:DataValue selected 'DETAIL_ID)))
+            (if (> dependencies 0)
+              (princ (strcat "\nDetail cannot be removed; " (itoa dependencies)
+                             " placed object(s) reference it."))
+              (progn
+                (initget "Yes No")
+                (setq answer (getkword "\nRemove this detail record? [Yes/No] <No>: "))
+                (if (equal answer "Yes")
+                  (progn
+                    (if (TT:ProjectSaveSection 'DETAIL_LIBRARY
+                          (TT:DataRemoveByValue (TT:Details project) 'DETAIL_ID
+                                                (TT:DataValue selected 'DETAIL_ID)))
+                      (princ "\nDetail record removed.")
+                      (princ "\nCould not remove the detail record.")))))))))
+       ((equal option "Verify") (TT:DetailsVerify project))
+       (T
         (progn
           (princ "\nProject details")
           (foreach record (TT:Details project)
-            (princ (strcat "\n  " (TT:DetailLabel record))))))))
+            (princ (strcat "\n  " (TT:DetailLabel record)))))))))
   (princ)
 )
 

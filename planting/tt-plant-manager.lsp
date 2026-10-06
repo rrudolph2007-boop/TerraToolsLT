@@ -117,8 +117,9 @@
                   (strcat "A Project Plant record references missing master plant ID: "
                           master-id))
                 (setq valid nil))
-              ((not (eq (TT:PlantRecordValue record 'CATEGORY)
-                        (TT:PlantRecordValue master 'CATEGORY)))
+              ((and (TT:PlantRecordValue master 'CATEGORY)
+                    (not (eq (TT:PlantRecordValue record 'CATEGORY)
+                             (TT:PlantRecordValue master 'CATEGORY))))
                 (TT:PlantSetError
                   (strcat "A Project Plant category does not match master plant ID: "
                           master-id))
@@ -395,6 +396,29 @@
     (TT:PlantPrintError))
 )
 
+(defun TT:PlantPaletteAddMaster (master / palette plants plant-id new-record)
+  (setq palette (TT:PlantPaletteLoad))
+  (cond
+    ((null palette) (TT:PlantPrintError) nil)
+    ((null master) nil)
+    (T
+      (setq plants (TT:PlantPaletteGetAllFromPalette palette)
+            plant-id (TT:PlantRecordValue master 'PLANT_ID))
+      (if (TT:PlantPaletteFindByMasterID plants plant-id)
+        (progn
+          (princ "\nThat Master Plant is already in the Project Plant Palette.")
+          nil)
+        (progn
+          (setq new-record (TT:PlantProjectRecordFromMaster master)
+                palette (TT:PlantPaletteWithPlants palette
+                          (append plants (list new-record))))
+          (if (TT:PlantPaletteSave palette)
+            (progn
+              (princ (strcat "\nPlant added to Project Plant Palette: "
+                             (TT:PlantRecordValue new-record 'PLANT_CODE)))
+              new-record)
+            (progn (TT:PlantPrintError) nil)))))))
+
 (defun TT:PlantCommandAdd
   (/ palette plants category masters plant-id master new-record)
   (setq palette (TT:PlantPaletteLoad))
@@ -417,24 +441,7 @@
               (if (null master)
                 (princ "\nAdd plant canceled.")
                 (progn
-                  (setq plant-id
-                    (TT:PlantRecordValue master 'PLANT_ID))
-                  (cond
-                    ((TT:PlantPaletteFindByMasterID plants plant-id)
-                      (princ
-                        "\nThat Master Plant is already in the Project Plant Palette."))
-                    (T
-                      (setq new-record
-                        (TT:PlantProjectRecordFromMaster master)
-                            palette
-                        (TT:PlantPaletteWithPlants
-                          palette
-                          (append plants (list new-record))))
-                      (if (TT:PlantPaletteSave palette)
-                        (princ
-                          (strcat "\nPlant added to Project Plant Palette: "
-                                  (TT:PlantRecordValue new-record 'PLANT_CODE)))
-                        (TT:PlantPrintError))))))))))))
+                  (TT:PlantPaletteAddMaster master)))))))))
   (princ)
 )
 
@@ -571,17 +578,19 @@
   (setq project (TT:PlantCommandProject))
   (if project
     (progn
-      (initget "List Add Edit Remove Master")
+      (initget "List Add Search Edit Remove Master User")
       (setq option
         (getkword
-          "\nTerraTools plants [List/Add/Edit/Remove/Master] <List>: "))
+          "\nTerraTools plants [List/Add/Search/Edit/Remove/Master/User] <List>: "))
       (if (null option) (setq option "List"))
       (cond
         ((equal option "List") (TT:PlantCommandList))
         ((equal option "Add") (TT:PlantCommandAdd))
+        ((equal option "Search") (C:TTPLANTSEARCH))
         ((equal option "Edit") (TT:PlantCommandEdit))
         ((equal option "Remove") (TT:PlantCommandRemove))
-        ((equal option "Master") (TT:PlantCommandMaster)))))
+        ((equal option "Master") (TT:PlantCommandMaster))
+        ((equal option "User") (C:TTPLANTUSER)))))
   (princ)
 )
 

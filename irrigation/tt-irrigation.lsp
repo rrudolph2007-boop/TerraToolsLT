@@ -272,6 +272,38 @@
           (if (cadr branch) (setq ambiguous T))))))
   (list total ambiguous))
 
+(defun TT:IrrigationPipeDownstreamFlow (pipe-item pipes equipment tolerance / ends uuid)
+  (setq ends (TT:IrrigationPipeEndpoints (car pipe-item))
+        uuid (cdr (assoc 'ENTITY_UUID (cdr pipe-item))))
+  (if (and ends uuid)
+    (TT:IrrigationDownstreamFlow (cadr ends) pipes equipment tolerance (list uuid))
+    (list nil T)))
+
+(defun TT:IrrigationIncomingPipeCount (point pipes tolerance / item ends count)
+  (setq count 0)
+  (foreach item pipes
+    (setq ends (TT:IrrigationPipeEndpoints (car item)))
+    (if (TT:IrrigationNearP point (cadr ends) tolerance)
+      (setq count (1+ count))))
+  count)
+
+(defun TT:IrrigationPointMemberP (point points tolerance / found candidate)
+  (foreach candidate points
+    (if (TT:IrrigationNearP point candidate tolerance) (setq found T)))
+  found)
+
+(defun TT:IrrigationMergedNodeCount (pipes tolerance / item ends count points point)
+  (setq count 0)
+  (foreach item pipes
+    (setq ends (TT:IrrigationPipeEndpoints (car item)))
+    (foreach point ends
+      (if (not (TT:IrrigationPointMemberP point points tolerance))
+        (setq points (cons point points)))))
+  (foreach point points
+    (if (> (TT:IrrigationIncomingPipeCount point pipes tolerance) 1)
+      (setq count (1+ count))))
+  count)
+
 (defun TT:IrrigationDisconnectedCount (pipes equipment tolerance / item point pipe ends connected count)
   (setq count 0)
   (foreach item equipment
@@ -281,25 +313,29 @@
       (if (or (TT:IrrigationNearP point (car ends) tolerance)
               (TT:IrrigationNearP point (cadr ends) tolerance))
         (setq connected T)))
-    (if (not connected) (setq count (1+ count))))
+    (if (and (> (TT:SafeNumber (cdr (assoc 'FLOW_GPM (cdr item))) 0.0) 0.0)
+             (not connected))
+      (setq count (1+ count))))
   count)
 
-(defun TT:IrrigationAnalyzeStation (station / items pipes equipment tolerance item data ends branch result rows total ambiguous disconnected)
+(defun TT:IrrigationAnalyzeStation (station / items pipes equipment tolerance item data branch result rows total ambiguous disconnected merged length-feet)
   (setq items (TT:IrrigationStationItems station) pipes (car items)
         equipment (cadr items) tolerance 0.01 total 0.0 ambiguous nil)
   (foreach item pipes
-    (setq data (cdr item) ends (TT:IrrigationPipeEndpoints (car item))
-          branch (TT:IrrigationDownstreamFlow (cadr ends) pipes equipment tolerance
-                                              (list (cdr (assoc 'ENTITY_UUID data))))
-          result (TT:HydraulicPipeResult (TT:EntityLength (car item)) (car branch)
+    (setq data (cdr item)
+          branch (TT:IrrigationPipeDownstreamFlow item pipes equipment tolerance)
+          length-feet (TT:DrawingLengthToFeet (TT:EntityLength (car item)))
+          result (if length-feet (TT:HydraulicPipeResult length-feet (car branch)
                    (TT:SafeNumber (cdr (assoc 'DIAMETER_IN data)) 0.0)
-                   (TT:SafeNumber (cdr (assoc 'C_FACTOR data)) 0.0) 0.0 0.0))
+                   (TT:SafeNumber (cdr (assoc 'C_FACTOR data)) 0.0) 0.0 0.0)))
     (if (cadr branch) (setq ambiguous T))
     (if result (setq rows (append rows (list (list (car item) data result))))))
   (foreach item equipment
     (setq total (+ total (TT:SafeNumber (cdr (assoc 'FLOW_GPM (cdr item))) 0.0))))
-  (setq disconnected (TT:IrrigationDisconnectedCount pipes equipment tolerance))
-  (list total rows disconnected ambiguous))
+  (setq disconnected (TT:IrrigationDisconnectedCount pipes equipment tolerance)
+        merged (TT:IrrigationMergedNodeCount pipes tolerance))
+  (if (> merged 0) (setq ambiguous T))
+  (list total rows disconnected ambiguous merged))
 
 (defun C:TTIRRIGATIONANALYZE (/ station analysis row result total)
   (setq station (getstring T "\nStation or zone to analyze: "))
@@ -312,6 +348,7 @@
         (if result (setq total (+ total (TT:DataValue result 'FRICTION_LOSS_PSI)))))
       (princ (strcat "\nSum of calculated directed pipe losses: " (rtos total 2 2) " psi"))
       (princ (strcat "\nDisconnected demand objects: " (itoa (caddr analysis))))
+      (princ (strcat "\nAmbiguous merged nodes: " (itoa (nth 4 analysis))))
       (if (cadddr analysis)
         (princ "\nAmbiguous loop detected. Flow results require manual review.")
         (princ "\nFlow propagated from each LINE start point toward its end point."))))
@@ -332,27 +369,49 @@
     (if length (princ "\nNo available diameter satisfies the criteria, or inputs are invalid.")))
   (princ))
 
-(defun C:TTIRRIGATIONSIZE (/ item data length flow master class diameter answer)
+(defun C:TTIRRIGATIONSIZE (/ item data station items pipes equipment pipe-item branch length master class diameter answer analysis)
   (setq item (TT:SelectSmartEntity "\nSelect a smart irrigation pipe: "))
-  (if (and item (TT:IrrigationPipeP (cdr item)))
-    (progn
-      (setq data (cdr item) length (TT:EntityLength (car item))
-            flow (TT:IrrigationStationDemand (cdr (assoc 'STATION data)))
-            master (TT:IrrigationMasterLoad) class (car (TT:DataValue master 'PIPE_CLASSES))
-            diameter (TT:HydraulicChooseDiameter length flow (TT:DataValue class 'C_FACTOR)
-                       (TT:DataValue class 'DIAMETERS) 5.0 5.0))
-      (if diameter
-        (progn
-          (princ (strcat "\nCalculated diameter: " (rtos diameter 2 2) " in."))
+  (cond
+    ((null item) nil)
+    ((not (TT:IrrigationPipeP (cdr item)))
+      (princ "\nThe selected object is not a TerraTools irrigation pipe."))
+    (T
+      (setq data (cdr item)
+            station (cdr (assoc 'STATION data))
+            items (TT:IrrigationStationItems station)
+            pipes (car items)
+            equipment (cadr items)
+            pipe-item (assoc (car item) pipes)
+            branch (if pipe-item (TT:IrrigationPipeDownstreamFlow pipe-item pipes equipment 0.01))
+            analysis (TT:IrrigationAnalyzeStation station)
+            length (TT:DrawingLengthToFeet (TT:EntityLength (car item)))
+            master (TT:IrrigationMasterLoad)
+            class (if master (car (TT:DataValue master 'PIPE_CLASSES))))
+      (if (and branch (not (cadr branch)) (not (cadddr analysis))
+               (= 0 (nth 4 analysis)) length class)
+        (setq diameter
+          (TT:HydraulicChooseDiameter length (car branch)
+            (TT:DataValue class 'C_FACTOR)
+            (TT:DataValue class 'DIAMETERS) 5.0 5.0)))
+      (cond
+        ((or (null pipe-item) (null branch) (cadr branch)
+             (cadddr analysis) (> (nth 4 analysis) 0))
+          (princ "\nPipe sizing stopped: station topology is ambiguous or contains a loop."))
+        ((null length)
+          (princ "\nPipe sizing stopped: drawing length units could not be resolved."))
+        ((null diameter)
+          (princ "\nNo available size passes the velocity and friction criteria."))
+        (T
+          (princ (strcat "\nDownstream flow: " (rtos (car branch) 2 2) " gpm"
+                         "\nCalculated diameter: " (rtos diameter 2 2) " in."))
           (initget "Yes No")
-          (setq answer (getkword " Apply calculated size? [Yes/No] <No>: "))
+          (setq answer (getkword "\nApply calculated size? [Yes/No] <No>: "))
           (if (equal answer "Yes")
             (progn
               (setq data (TT:SmartMetadataPut data 'DIAMETER_IN diameter)
                     data (TT:SmartMetadataPut data 'MANUAL_SIZE 0.0))
               (TT:SetEntityXData (car item) data)
-              (princ "\nPipe size updated."))))
-        (princ "\nNo available size passes the design criteria."))))
+              (princ "\nPipe size updated.")))))))
   (princ))
 
 (defun C:TTZONEINFO (/ station analysis)
@@ -394,40 +453,53 @@
   (princ (strcat "\nHighlighted " (itoa count) " object(s). REGEN clears highlighting."))
   (princ))
 
-(defun C:TTCRITICALPATH (/ selection index entity data station flow result total available required elevation equipment total-required margin)
+(defun C:TTCRITICALPATH (/ selection index entity data station items pipes demand-items pipe-item branch flow max-flow result total available required elevation equipment total-required margin ambiguous length-feet)
   (princ "\nSelect smart pipes in the path to report.")
   (setq selection (ssget) total 0.0)
   (if selection
     (progn
       (setq station (getstring T "\nStation or zone for path flow: ")
-            flow (TT:IrrigationStationDemand station) index 0)
+            items (TT:IrrigationStationItems station) pipes (car items)
+            demand-items (cadr items) index 0 ambiguous nil flow 0.0 max-flow 0.0)
       (while (< index (sslength selection))
         (setq entity (ssname selection index) data (TT:GetEntityXData entity))
         (if (and data (TT:IrrigationPipeP data))
           (progn
-            (setq result (TT:HydraulicPipeResult (TT:EntityLength entity) flow
-                     (TT:SafeNumber (cdr (assoc 'DIAMETER_IN data)) 0.0)
-                     (TT:SafeNumber (cdr (assoc 'C_FACTOR data)) 0.0) 0.0 0.0))
-            (if result (setq total (+ total (TT:DataValue result 'TOTAL_LOSS_PSI))))
+            (setq pipe-item (assoc entity pipes)
+                  branch (if pipe-item (TT:IrrigationPipeDownstreamFlow pipe-item pipes demand-items 0.01))
+                  length-feet (TT:DrawingLengthToFeet (TT:EntityLength entity))
+                  flow (if branch (car branch) 0.0)
+                  result (if (and branch (not (cadr branch)) length-feet)
+                           (TT:HydraulicPipeResult length-feet flow
+                             (TT:SafeNumber (cdr (assoc 'DIAMETER_IN data)) 0.0)
+                             (TT:SafeNumber (cdr (assoc 'C_FACTOR data)) 0.0) 0.0 0.0)))
+            (if (> flow max-flow) (setq max-flow flow))
+            (if (or (null result) (and branch (cadr branch))) (setq ambiguous T))
+            (if result
+              (setq total (+ total (TT:DataValue result 'TOTAL_LOSS_PSI))))
             (redraw entity 3)))
         (setq index (1+ index)))
-      (setq available (getreal "\nAvailable pressure at POC, psi: ")
-            required (if available (getreal "\nRequired terminal pressure, psi: "))
-            elevation (if required (getreal "\nNet elevation rise, feet <0>: ")))
-      (if (and required (null elevation)) (setq elevation 0.0))
-      (setq equipment (if required (getreal "\nEquipment losses, psi <0>: ")))
-      (if (and required (null equipment)) (setq equipment 0.0))
-      (if (and available required elevation equipment)
+      (if (> (TT:IrrigationMergedNodeCount pipes 0.01) 0) (setq ambiguous T))
+      (if ambiguous
+        (princ "\nCritical-path calculation stopped: selected topology is ambiguous or units are unresolved.")
         (progn
-          (setq total-required (+ total required equipment (TT:ElevationToPSI elevation))
-                margin (- available total-required))
-          (princ (strcat "\nSelected critical path flow: " (rtos flow 2 2) " gpm"
-                         "\nPipe friction: " (rtos total 2 2) " psi"
-                         "\nEquipment loss: " (rtos equipment 2 2) " psi"
-                         "\nElevation effect: " (rtos (TT:ElevationToPSI elevation) 2 2) " psi"
-                         "\nRequired terminal pressure: " (rtos required 2 2) " psi"
-                         "\nAvailable pressure: " (rtos available 2 2) " psi"
-                         "\nPressure margin: " (rtos margin 2 2) " psi"))))))
+          (setq available (getreal "\nAvailable pressure at POC, psi: ")
+                required (if available (getreal "\nRequired terminal pressure, psi: "))
+                elevation (if required (getreal "\nNet elevation rise, feet <0>: ")))
+          (if (and required (null elevation)) (setq elevation 0.0))
+          (setq equipment (if required (getreal "\nEquipment losses, psi <0>: ")))
+          (if (and required (null equipment)) (setq equipment 0.0))
+          (if (and available required elevation equipment)
+            (progn
+              (setq total-required (+ total required equipment (TT:ElevationToPSI elevation))
+                    margin (- available total-required))
+              (princ (strcat "\nMaximum downstream flow on selected path: " (rtos max-flow 2 2) " gpm"
+                             "\nPipe friction: " (rtos total 2 2) " psi"
+                             "\nEquipment loss: " (rtos equipment 2 2) " psi"
+                             "\nElevation effect: " (rtos (TT:ElevationToPSI elevation) 2 2) " psi"
+                             "\nRequired terminal pressure: " (rtos required 2 2) " psi"
+                             "\nAvailable pressure: " (rtos available 2 2) " psi"
+                             "\nPressure margin: " (rtos margin 2 2) " psi"))))))))
   (princ))
 
 (defun C:TTWATERING (/ station area depth flow gallons runtime)
@@ -468,9 +540,9 @@
             (setq data (cdr item))
             (if (TT:IrrigationPipeP data)
               (progn
-                (setq length (TT:EntityLength (car item)))
+                (setq length (TT:DrawingLengthToFeet (TT:EntityLength (car item))))
                 (setq text (strcat text "\\PPIPE | " (cdr (assoc 'OBJECT_TYPE data))
-                             " | " (rtos length 2 2) " ft | "
+                             " | " (if length (rtos length 2 2) "UNRESOLVED") " ft | "
                              (rtos (TT:SafeNumber (cdr (assoc 'DIAMETER_IN data)) 0.0) 2 2)
                              " in")))))
           (setq height (TT:GetPreference 'ANNOTATION_TEXT_HEIGHT)

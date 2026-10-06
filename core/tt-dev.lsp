@@ -235,7 +235,13 @@
       (TT:DevSmokeSkip "Project palette" "Planting module unavailable.")))
 
   (foreach module-check
-    '((*TT:ScheduleModuleLoaded* . "Schedule engine")
+    '((*TT:UnitsModuleLoaded* . "Unit engine")
+      (*TT:CSVModuleLoaded* . "CSV engine")
+      (*TT:StandardsModuleLoaded* . "Standards")
+      (*TT:PlantSearchModuleLoaded* . "Plant search")
+      (*TT:QAModuleLoaded* . "QA module")
+      (*TT:HelpModuleLoaded* . "Help module")
+      (*TT:ScheduleModuleLoaded* . "Schedule engine")
       (*TT:SiteModuleLoaded* . "Site module")
       (*TT:DetailsModuleLoaded* . "Details module")
       (*TT:LightingModuleLoaded* . "Lighting module")

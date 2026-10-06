@@ -15,6 +15,7 @@
   (TT:PrintValue "Drawing directory" (getvar "DWGPREFIX"))
   (TT:PrintValue "Current layer" (getvar "CLAYER"))
   (TT:PrintValue "INSUNITS" (getvar "INSUNITS"))
+  (TT:PrintValue "Resolved drawing unit" (TT:DrawingUnitName))
   (TT:PrintValue "Core loaded successfully" (if *TT:CoreLoaded* "Yes" "No"))
   (TT:PrintValue "TERRATOOLS XData application registered"
                  (if (TT:XDataAppRegisteredP) "Yes" "No"))
@@ -68,6 +69,12 @@
     (TT:PrintValue "Preferences error" (TT:PreferencesLastError)))
   (TT:PrintValue "Planting Module Loaded"
     (if *TT:PlantingModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Plant Search Loaded"
+    (if *TT:PlantSearchModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Standards Module Loaded"
+    (if *TT:StandardsModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "QA Module Loaded"
+    (if *TT:QAModuleLoaded* "Yes" "No"))
   (TT:PrintValue "Schedule Engine Loaded"
     (if *TT:ScheduleModuleLoaded* "Yes" "No"))
   (TT:PrintValue "Site Module Loaded"

@@ -7,7 +7,9 @@ TerraTools uses four levels of data:
 3. A placed smart instance is an ordinary DWG entity with lightweight TERRATOOLS XData.
 4. Labels, schedules, counts, costs, and reports are derived views.
 
-The project file is one AutoLISP S-expression headed by `TERRATOOLS_PROJECT`. Required schema-version 1 fields remain unchanged. Optional additive keys include `PREFERENCES`, `PLANT_PALETTE`, `PLANT_MIXES`, `PLANT_LABELS`, `WORK_AREAS`, `REFERENCE_NOTES`, `DETAIL_LIBRARY`, `LIGHTING_PALETTE`, and `IRRIGATION_PALETTE`. Unknown keys survive updates because project changes replace only the requested keyed section.
+The project file is one AutoLISP S-expression headed by `TERRATOOLS_PROJECT`. Required schema-version 1 fields remain unchanged. Optional additive keys include `PREFERENCES`, `PLANT_PALETTE`, `PLANT_MIXES`, `PLANT_LABELS`, `PLANT_FAVORITES`, `PLANT_RECENT`, `PLANT_DATA_PATHS`, `WORK_AREAS`, `REFERENCE_NOTES`, `DETAIL_LIBRARY`, `LIGHTING_PALETTE`, and `IRRIGATION_PALETTE`. Unknown keys survive updates because project changes replace only the requested keyed section.
+
+Plant source data can be distributed `PLANT_RECORD` data, a separate user library, or external `NORMALIZED_PLANT` records. A normalized record has stable source identity and optional taxonomy, names, family, habit, hardiness, water, sun, soil, mature size, region, distribution, bloom, foliage, growth, uses, wetland, production defaults, URL, license, attribution, date, and notes. Empty source fields stay empty.
 
 TERRATOOLS entity XData schema 1 starts with `TT_ENTITY`, followed by the schema number and key/value pairs. Core fields are `entity_uuid`, `project_uuid`, `module`, `object_type`, `catalog_id`, and `work_area_id`. Lighting and irrigation add small operational values such as circuit, station, flow, diameter, C factor, capacity, and manual-size status. Project and catalog records are never copied into XData.
 

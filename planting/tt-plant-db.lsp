@@ -182,10 +182,18 @@
                 (TT:StorageLastError)))))
 )
 
-(defun TT:PlantMasterGetAll (/ catalog)
+(defun TT:PlantMasterGetAll (/ catalog plants user-plants external-plants)
   (setq catalog (TT:PlantMasterLoad))
   (if catalog
-    (TT:PlantMasterCatalogValue catalog 'PLANTS)
+    (progn
+      (setq plants (TT:PlantMasterCatalogValue catalog 'PLANTS)
+            user-plants (if (and (boundp '*TT:PlantSearchModuleLoaded*)
+                                 *TT:PlantSearchModuleLoaded*)
+                          (TT:PlantUserGetAll))
+            external-plants (if (and (boundp '*TT:PlantSearchModuleLoaded*)
+                                     *TT:PlantSearchModuleLoaded*)
+                              (TT:PlantExternalGetAll)))
+      (append plants user-plants external-plants))
     nil)
 )
 

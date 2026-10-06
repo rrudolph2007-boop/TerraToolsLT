@@ -8,42 +8,51 @@
     (TT:SmartFilter (TT:SmartScan) "PLANTING" "PLANT_AREA_TRIANGULAR"))
 )
 
-(defun TT:PlantDerivedQuantity (project-id work-area-id / quantity item metadata area-quantity project mix component plant spacing)
-  (setq quantity (TT:PlantCountByProjectID project-id work-area-id))
-  (foreach item (TT:PlantAreaItems)
-    (setq metadata (cdr item))
-    (if (and (equal project-id (cdr (assoc 'CATALOG_ID metadata)))
-             (or (null work-area-id)
-                 (equal work-area-id (cdr (assoc 'WORK_AREA_ID metadata)))))
-      (progn
-        (setq area-quantity (TT:PlantAreaQuantity (car item) metadata))
-        (if area-quantity (setq quantity (+ quantity area-quantity))))))
-  (setq project (TT:ProjectCurrent))
-  (foreach item (TT:SmartFilter (TT:SmartScan) "PLANTING" "PLANT_MIX_AREA")
-    (setq metadata (cdr item))
-    (if (or (null work-area-id) (equal work-area-id (cdr (assoc 'WORK_AREA_ID metadata))))
-      (progn
-        (setq mix (TT:DataFindByValue (TT:PlantMixes project) 'MIX_ID
-                                      (cdr (assoc 'CATALOG_ID metadata))))
-        (foreach component (TT:DataValue mix 'COMPONENTS)
-          (if (equal project-id (TT:DataValue component 'PROJECT_PLANT_ID))
-            (progn
-              (setq plant (TT:PlantFindProjectByID project-id)
-                    spacing (TT:PlantSpacingNumber plant))
-              (if (and spacing (> spacing 0.0) (TT:EntityArea (car item)))
-                (setq quantity (+ quantity
-                  (fix (+ 0.999999
-                    (* (/ (TT:EntityArea (car item)) (* spacing spacing))
-                       (/ (TT:DataValue component 'PERCENT) 100.0)))))))))))))
-  quantity
-)
+(defun TT:PlantDerivedQuantityFromItems
+  (project-id plant-record work-area-id items project
+   / quantity item metadata object-type area-quantity mix component spacing area)
+  (setq quantity 0 spacing (TT:PlantSpacingNumber plant-record))
+  (foreach item items
+    (setq metadata (cdr item) object-type (cdr (assoc 'OBJECT_TYPE metadata)))
+    (if (or (null work-area-id)
+            (equal work-area-id (cdr (assoc 'WORK_AREA_ID metadata))))
+      (cond
+        ((and (equal object-type "PLANT_INSTANCE")
+              (equal project-id (cdr (assoc 'CATALOG_ID metadata))))
+          (setq quantity (1+ quantity)))
+        ((and (member object-type '("PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"))
+              (equal project-id (cdr (assoc 'CATALOG_ID metadata))))
+          (setq area-quantity (TT:PlantAreaQuantity (car item) metadata))
+          (if area-quantity (setq quantity (+ quantity area-quantity))))
+        ((equal object-type "PLANT_MIX_AREA")
+          (setq mix (TT:DataFindByValue (TT:PlantMixes project) 'MIX_ID
+                                        (cdr (assoc 'CATALOG_ID metadata)))
+                area (TT:EntityArea (car item)))
+          (foreach component (if mix (TT:DataValue mix 'COMPONENTS))
+            (if (and (equal project-id (TT:DataValue component 'PROJECT_PLANT_ID))
+                     area spacing (> spacing 0.0))
+              (setq quantity (+ quantity
+                (fix (+ 0.999999
+                  (* (/ area (* spacing spacing))
+                     (/ (TT:DataValue component 'PERCENT) 100.0))))))))))))
+  quantity)
 
-(defun TT:PlantScheduleRows (work-area-id / palette rows record quantity)
-  (setq palette (TT:PlantPaletteLoad))
+(defun TT:PlantDerivedQuantity (project-id work-area-id / project palette plant items)
+  (setq project (TT:ProjectCurrent) palette (if project (TT:PlantPaletteLoadFromProject project))
+        plant (if palette (TT:DataFindByValue (TT:PlantPaletteGetAllFromPalette palette)
+                                               'PROJECT_PLANT_ID project-id))
+        items (TT:SmartFilter (TT:SmartScan) "PLANTING" nil))
+  (if plant (TT:PlantDerivedQuantityFromItems project-id plant work-area-id items project) 0))
+
+(defun TT:PlantScheduleRows (work-area-id / project palette rows record quantity items)
+  (setq project (TT:ProjectCurrent)
+        palette (if project (TT:PlantPaletteLoadFromProject project))
+        items (TT:SmartFilter (TT:SmartScan) "PLANTING" nil))
   (if palette
     (foreach record (TT:PlantPaletteGetAllFromPalette palette)
-      (setq quantity (TT:PlantDerivedQuantity
-                       (TT:PlantRecordValue record 'PROJECT_PLANT_ID) work-area-id))
+      (setq quantity (TT:PlantDerivedQuantityFromItems
+                       (TT:PlantRecordValue record 'PROJECT_PLANT_ID)
+                       record work-area-id items project))
       (if (> quantity 0)
         (setq rows
           (cons
@@ -196,31 +205,31 @@
       (setq found record)))
   found)
 
-(defun C:TTIMPORTPLANTCSV (/ path stream line code master palette plants added skipped new-record)
+(defun C:TTIMPORTPLANTCSV (/ path rows headers row code master palette plants added skipped new-record)
   (setq path (getfiled "Import TerraTools Plant Codes" "" "csv" 0))
   (if path
     (progn
-      (setq stream (open path "r") palette (TT:PlantPaletteLoad) added 0 skipped 0)
-      (if (and stream palette)
+      (setq rows (TT:CSVReadFile path) palette (TT:PlantPaletteLoad) added 0 skipped 0)
+      (if (and rows palette)
         (progn
-          (read-line stream)
-          (setq plants (TT:PlantPaletteGetAllFromPalette palette))
-          (while (setq line (read-line stream))
-            (setq code (TT:CSVFirstField line) master (TT:PlantMasterFindByCode code))
+          (setq headers (TT:CSVHeaderMap (car rows))
+                plants (TT:PlantPaletteGetAllFromPalette palette))
+          (foreach row (cdr rows)
+            (setq code (TT:CSVField row headers "Code"))
+            (if (null code) (setq code (car row)))
+            (setq master (if code (TT:PlantMasterFindByCode code)))
             (if (and master
                      (not (TT:PlantPaletteFindByMasterID plants
                             (TT:PlantRecordValue master 'PLANT_ID))))
               (progn
                 (setq new-record (TT:PlantProjectRecordFromMaster master)
                       plants (append plants (list new-record)) added (1+ added)))
-              (setq skipped (1+ skipped))))
-          (close stream) (setq stream nil)
+               (setq skipped (1+ skipped))))
           (setq palette (TT:PlantPaletteWithPlants palette plants))
           (if (TT:PlantPaletteSave palette)
             (princ (strcat "\nImported " (itoa added) " plant(s); skipped "
                            (itoa skipped) " duplicate or unknown code(s)."))))
-        (progn (if stream (close stream))
-               (princ "\nThe CSV or active Project Plant Palette could not be read.")))))
+        (princ "\nThe CSV or active Project Plant Palette could not be read."))))
   (princ))
 
 T

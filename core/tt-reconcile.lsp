@@ -8,18 +8,21 @@
   '("PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"
     "PLANT_MIX_AREA" "PLANT_LABEL" "PLANT_SCHEDULE" "WORK_AREA"
     "REFNOTE_NOTATION" "REFNOTE_COUNT" "REFNOTE_LENGTH" "REFNOTE_AREA"
-    "REFNOTE_VOLUME" "REFNOTE_AMENITY" "REFNOTE_SCHEDULE" "CONCEPT_ZONE"
+    "REFNOTE_VOLUME" "REFNOTE_AMENITY" "REFNOTE_MATERIAL" "REFNOTE_HARDSCAPE"
+    "REFNOTE_SCHEDULE" "CONCEPT_ZONE"
     "DETAIL_INSTANCE" "DETAIL_CALLOUT" "FIXTURE" "WIRE" "TRANSFORMER"
     "SPRAY_HEAD" "ROTOR" "DRIP" "VALVE" "CONTROLLER" "POC"
     "FILTER_REGULATOR" "SLEEVE" "COVERAGE" "MAINLINE_PIPE" "LATERAL_PIPE"
     "DRIP_LINE" "IRRIGATION_LABEL"))
 
 (defun TT:ReconcileScan (repair / items selection total seen item entity metadata uuid project-uuid
-                                module object-type duplicates malformed missing-project unknown unknown-object repaired)
+                                active-project-uuid module object-type duplicates malformed missing-project foreign-project unknown unknown-object repaired)
   (setq items (TT:SmartScan)
         selection (ssget "_X" (list (list -3 (list *TT:XDataApp*))))
         total (if selection (sslength selection) 0)
-        malformed (- total (length items)))
+        malformed (- total (length items))
+        active-project-uuid (if (TT:ProjectCurrent)
+                              (TT:ProjectValue *TT:CurrentProject* 'PROJECT_UUID)))
   (foreach item items
     (setq entity (car item) metadata (cdr item)
           uuid (cdr (assoc 'ENTITY_UUID metadata))
@@ -38,6 +41,9 @@
       (T (setq seen (cons uuid seen))))
     (if (or (null project-uuid) (equal project-uuid ""))
       (setq missing-project (1+ (if missing-project missing-project 0))))
+    (if (and active-project-uuid project-uuid
+             (not (equal active-project-uuid project-uuid)))
+      (setq foreign-project (1+ (if foreign-project foreign-project 0))))
     (if (or (null module) (not (TT:KnownModuleP module)))
       (setq unknown (1+ (if unknown unknown 0))))
     (if (or (null object-type) (not (member object-type *TT:KnownObjectTypes*)))
@@ -46,6 +52,7 @@
         (cons 'DUPLICATES (if duplicates duplicates 0))
         (cons 'MALFORMED (if malformed malformed 0))
         (cons 'MISSING_PROJECT (if missing-project missing-project 0))
+        (cons 'FOREIGN_PROJECT (if foreign-project foreign-project 0))
         (cons 'UNKNOWN_MODULE (if unknown unknown 0))
         (cons 'UNKNOWN_OBJECT_TYPE (if unknown-object unknown-object 0))
         (cons 'REPAIRED (if repaired repaired 0)))
@@ -56,16 +63,21 @@
   (TT:PrintValue "Duplicate UUIDs" (cdr (assoc 'DUPLICATES report)))
   (TT:PrintValue "Malformed metadata" (cdr (assoc 'MALFORMED report)))
   (TT:PrintValue "Missing project UUID" (cdr (assoc 'MISSING_PROJECT report)))
+  (TT:PrintValue "Foreign project UUID" (cdr (assoc 'FOREIGN_PROJECT report)))
   (TT:PrintValue "Unknown modules" (cdr (assoc 'UNKNOWN_MODULE report)))
   (TT:PrintValue "Unknown object types" (cdr (assoc 'UNKNOWN_OBJECT_TYPE report)))
   (TT:PrintValue "UUIDs repaired" (cdr (assoc 'REPAIRED report)))
 )
 
-(defun C:TTRECONCILE (/ *error* report)
-  (defun *error* (message) (TT:ReportError "TTRECONCILE" message))
+(defun C:TTRECONCILE (/ *error* report undo-open)
+  (defun *error* (message)
+    (if undo-open (command-s "_.UNDO" "_End"))
+    (TT:ReportError "TTRECONCILE" message))
   (command-s "_.UNDO" "_Begin")
+  (setq undo-open T)
   (setq report (TT:ReconcileScan T))
   (command-s "_.UNDO" "_End")
+  (setq undo-open nil)
   (princ "\nTerraTools reconciliation")
   (TT:PrintReconcileReport report)
   (princ)
