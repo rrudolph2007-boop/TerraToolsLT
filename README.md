@@ -23,14 +23,29 @@ AutoCAD LT 2024 or newer on Windows.
 `TerraTools.lsp` loads the modules in `core/`. The scaffold provides
 `TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
 The UUID/XData foundation adds `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`, and
-`TTUNTAGTEST`. It does not create drawing entities, change system variables, or
-write project data. No external runtime or compiled extension is required.
+`TTUNTAGTEST`, `TTPROJECT`, and `TTPROJECTINFO`. It does not create drawing
+entities or change system variables. No external runtime or compiled extension
+is required.
 
 TerraTools smart-entity metadata uses the registered XData application
 `TERRATOOLS`. Schema version 1 stores a `TT_ENTITY` marker, the schema version,
 and named string fields for entity UUID, project UUID, module, object type,
 catalog ID, and Work Area ID. Fields without values are omitted. Project and
 catalog records are not stored in XData.
+
+### Project storage
+
+Each TerraTools project is stored outside the DWG in a file named
+`terratools-project.dat`. The file contains one AutoLISP S-expression with a
+format marker and keyed project fields. All file access goes through
+`core/tt-storage.lsp`, which keeps the physical format separate from project
+commands.
+
+Before replacing an existing valid project file, TerraTools verifies a staging
+file and writes `terratools-project.dat.bak`. The current drawing stores the
+project UUID and project data path as `TERRATOOLS` XData on the drawing's Named
+Object Dictionary. This creates no visible drawing entity and does not store the
+complete project record in the DWG.
 
 ### Load in AutoCAD LT
 
@@ -85,7 +100,8 @@ Loading is per drawing; use `APPLOAD` in each drawing for these tests. Automatic
 startup installation is not included. Failed reloads mark the core unavailable
 but do not remove command definitions already loaded in that drawing.
 
-Compatibility has been reviewed against the AutoCAD LT 2024 AutoLISP reference.
-Real execution in AutoCAD LT is still required before treating this milestone
-as tested. The reserved feature directories are empty and are not tracked by
-Git until they contain files.
+Project management compatibility has been reviewed against the AutoCAD LT 2024
+AutoLISP reference. Real execution in AutoCAD LT is still required before
+treating the project management and storage milestone as tested. The reserved
+feature directories are empty and are not tracked by Git until they contain
+files.
