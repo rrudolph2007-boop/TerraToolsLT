@@ -2,7 +2,8 @@
 ;;; getvar returns nil for an unavailable variable; TT:PrintValue reports it.
 
 (defun C:TTDEBUG
-  (/ *error* project association project-path preferences layers-exist)
+  (/ *error* project association project-path preferences layers-exist
+     master-catalog master-count palette palette-count planting-error)
   (defun *error* (message)
     (TT:ReportError "TTDEBUG" message)
   )
@@ -65,6 +66,26 @@
     (if preferences (if layers-exist "Yes" "No") nil))
   (if (and project (null preferences) (TT:PreferencesLastError))
     (TT:PrintValue "Preferences error" (TT:PreferencesLastError)))
+  (TT:PrintValue "Planting Module Loaded"
+    (if *TT:PlantingModuleLoaded* "Yes" "No"))
+  (if *TT:PlantingModuleLoaded*
+    (progn
+      (setq master-catalog (TT:PlantMasterLoad))
+      (if master-catalog
+        (setq master-count
+          (length (TT:PlantMasterCatalogValue master-catalog 'PLANTS)))
+        (setq planting-error (TT:PlantLastError)))
+      (if project
+        (progn
+          (setq palette (TT:PlantPaletteLoadFromProject project))
+          (if palette
+            (setq palette-count
+              (length (TT:PlantPaletteGetAllFromPalette palette)))
+            (setq planting-error (TT:PlantLastError)))))))
+  (TT:PrintValue "Master Plant Count" master-count)
+  (TT:PrintValue "Project Palette Count" palette-count)
+  (if planting-error
+    (TT:PrintValue "Planting error" planting-error))
   (princ)
 )
 

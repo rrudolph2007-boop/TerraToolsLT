@@ -12,7 +12,7 @@ TerraTools LT is an original landscape architecture CAD productivity system desi
 
 ## Development Status
 
-Current phase: Core architecture.
+Current phase: Planting data architecture.
 
 ## Platform Target
 
@@ -24,7 +24,8 @@ AutoCAD LT 2024 or newer on Windows.
 `TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
 Current core commands include `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`,
 `TTUNTAGTEST`, `TTPROJECT`, `TTPROJECTINFO`, `TTPREFERENCES`, `TTLAYERS`, and
-`TTSCALE`. The core does not create drawing geometry or change system variables.
+`TTSCALE`. Planting data commands include `TTPLANTS`, `TTPLANTLIST`, and
+`TTPLANTMASTER`. The current planting milestone does not create drawing geometry.
 No external runtime or compiled extension is required.
 
 TerraTools smart-entity metadata uses the registered XData application
@@ -64,10 +65,23 @@ layer with the same name unchanged. New helper layers use the DXF nonplot flag.
 to Imperial and Metric projects and does not depend on AutoCAD's current
 annotation scale.
 
+### Plant data
+
+The shared Master Plant Catalog is stored at
+`data/terratools-plant-master.dat`, relative to the TerraTools installation
+folder. It is a schema-versioned AutoLISP S-expression and contains original
+sample records. Plant database functions handle all catalog access.
+
+Each project's selected plants are stored under the additive `PLANT_PALETTE`
+key in that project's existing `terratools-project.dat` file. A project made
+before the planting module has no such key and loads with an empty palette.
+Each palette record has its own project plant UUID, keeps its Master Plant ID,
+and contains a project-specific copy of the editable specifications.
+
 ### Load in AutoCAD LT
 
-1. Keep `TerraTools.lsp` and the `core/` folder together in the installation
-   folder. Folder names may contain spaces.
+1. Keep `TerraTools.lsp` and its `core/`, `planting/`, and `data/` folders
+   together in the installation folder. Folder names may contain spaces.
 2. Run `OPTIONS`. On the Files tab, add the installation folder to **Support
    File Search Path**. Under **Trusted Locations**, add the installation folder
    with `\...` at the end, for example `<TerraTools installation folder>\...`.
@@ -117,8 +131,7 @@ Loading is per drawing; use `APPLOAD` in each drawing for these tests. Automatic
 startup installation is not included. Failed reloads mark the core unavailable
 but do not remove command definitions already loaded in that drawing.
 
-The Core, UUID/XData, and project management milestones have passed real
-AutoCAD LT testing. Preferences, standard-layer creation, and drawing scale
-still require runtime testing in AutoCAD LT before this milestone is treated as
-stable. The reserved feature directories are empty and are not tracked by Git
-until they contain files.
+The Core, UUID/XData, project management, Preferences, standard-layer creation,
+and drawing scale milestones have passed real AutoCAD LT testing. The Master
+Plant Catalog and Project Plant Palette still require runtime testing in
+AutoCAD LT before this milestone is treated as stable.

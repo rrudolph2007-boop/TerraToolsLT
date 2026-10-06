@@ -17,6 +17,7 @@
   ;; Clear readiness on every attempt, including a failed reload.
   (setq *TT:Version* "0.1.0"
         *TT:CoreLoaded* nil
+        *TT:PlantingModuleLoaded* nil
         *TT:Root* nil
         loader-path (findfile "TerraTools.lsp"))
 
@@ -43,6 +44,8 @@
                       "core/tt-project.lsp"
                       "core/tt-preferences.lsp"
                       "core/tt-scale.lsp"
+                      "planting/tt-plant-db.lsp"
+                      "planting/tt-plant-manager.lsp"
                       "core/tt-debug.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
