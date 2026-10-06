@@ -1,142 +1,34 @@
 # TerraTools LT
 
-TerraTools LT is an original landscape architecture CAD productivity system designed for AutoCAD LT 2024+ on Windows.
+TerraTools LT is a landscape architecture production toolkit for AutoCAD LT 2024+ on Windows. Release candidate `0.9.0-rc1` uses AutoLISP, DCL, ordinary DWG entities, TERRATOOLS XData, and external S-expression project files. It does not require full AutoCAD, .NET, ObjectARX, VBA, Civil 3D, Python, Node.js, or a database service.
 
-## Core Technologies
+## Install and load
 
-- AutoLISP
-- DCL
-- AutoCAD XData
-- Standard AutoCAD LT entities
-- External project data storage
+Keep `TerraTools.lsp` with its `core`, `planting`, `site`, `details`, `lighting`, `irrigation`, `schedules`, `dialogs`, and `data` folders. Add the installation folder to AutoCAD LT's Support File Search Path and Trusted Locations. Include `\...` in the trusted path so subfolders are trusted. Run `APPLOAD`, select `TerraTools.lsp`, then type `TT`.
 
-## Development Status
+The loader resolves every module from the folder containing the selected `TerraTools.lsp`. It does not use a machine-specific path. After editing source, use `TTRELOAD`. Use `TTDEVSMOKE` for read-only checks and `TTDEBUG` for current environment and module status.
 
-Current phase: Planting data architecture.
+## Product areas
 
-## Platform Target
+- `TT`: DCL launcher with a command-line fallback.
+- Project: external project records, DWG association, preferences, layers, scale, and Work Areas.
+- Planting: Master Catalog, Project Palette, placement, editing, areas, mixes, labels, schedules, costs, and CSV exchange.
+- Site: reference notes, measured schedules, concept zones, area, length, volume, slope, coordinate, and spot labels.
+- Details: project detail records, placements, callouts, renumbering, and indexes.
+- Lighting: Master Fixture Catalog, Project Fixture Palette, fixtures, transformers, wire, circuits, loads, schedules, costs, and verification.
+- Irrigation: equipment palette, equipment and pipe graphics, coverage, stations, topology checks, downstream flow, hydraulics, sizing, critical paths, schedules, and verification.
+- Diagnostics: smart-object inspection, verification, UUID reconciliation, highlighting, mimic, and substitution.
 
-AutoCAD LT 2024 or newer on Windows.
+## Data model
 
-## Core Scaffold 0.1.0
+Project data is stored in `terratools-project.dat` in a user-selected project folder. The DWG stores only the project UUID and project path on the Named Object Dictionary. The external file remains authoritative. Before overwrite, the storage layer validates a staging file and maintains `terratools-project.dat.bak`.
 
-`TerraTools.lsp` loads the modules in `core/`. The scaffold provides
-`TTHELLO`, read-only diagnostics through `TTDEBUG`, and command error reporting.
-Current core commands include `TTTESTUUID`, `TTTAGTEST`, `TTINFOTEST`,
-`TTUNTAGTEST`, `TTPROJECT`, `TTPROJECTINFO`, `TTPREFERENCES`, `TTLAYERS`, and
-`TTSCALE`. Development commands include `TTRELOAD` and `TTDEVSMOKE`. Planting
-data commands include `TTPLANTS`, `TTPLANTLIST`, and `TTPLANTMASTER`. The
-current planting milestone does not create drawing geometry.
-No external runtime or compiled extension is required.
+Smart objects remain ordinary INSERT, LINE, LWPOLYLINE, CIRCLE, TEXT, or MTEXT entities. TERRATOOLS XData stores a unique entity UUID and lightweight identity fields. AutoCAD handles and block names are not permanent identity. Master records feed project palettes, project records feed placed instances, and schedules and labels are derived from current records and geometry.
 
-TerraTools smart-entity metadata uses the registered XData application
-`TERRATOOLS`. Schema version 1 stores a `TT_ENTITY` marker, the schema version,
-and named string fields for entity UUID, project UUID, module, object type,
-catalog ID, and Work Area ID. Fields without values are omitted. Project and
-catalog records are not stored in XData.
+Project schema version 1 remains in use. Release-candidate sections are additive, so existing schema-version 1 project files remain valid when the new sections are absent. See [Data Model](docs/DATA_MODEL.md).
 
-### Project storage
+## Runtime status
 
-Each TerraTools project is stored outside the DWG in a file named
-`terratools-project.dat`. The file contains one AutoLISP S-expression with a
-format marker and keyed project fields. All file access goes through
-`core/tt-storage.lsp`, which keeps the physical format separate from project
-commands.
+The earlier Core, UUID/XData, project, preferences, layer, scale, Master Plant Catalog, and basic Project Plant Palette work passed real AutoCAD LT tests before this release-candidate pass. The new release-candidate modules have received static review only. Run [ACCEPTANCE_TESTS.md](ACCEPTANCE_TESTS.md) in AutoCAD LT before treating them as verified.
 
-Before replacing an existing valid project file, TerraTools verifies a staging
-file and writes `terratools-project.dat.bak`. The current drawing stores the
-project UUID and project data path as `TERRATOOLS` XData on the drawing's Named
-Object Dictionary. This creates no visible drawing entity and does not store the
-complete project record in the DWG.
-
-### Preferences, layers, and scale
-
-Project preferences are stored in the project data file under an additive
-`PREFERENCES` record. Existing schema-version 1 projects without this record use
-`TT_DEFAULT` values until preferences are saved. The project's existing `UNITS`
-field is authoritative; preferences classify it as Imperial or Metric without
-storing a second units value.
-
-Layer preferences map logical roles such as `TREE` and `HELPER_NPLT` to physical
-layer names. `TTLAYERS` creates missing configured layers and leaves an existing
-layer with the same name unchanged. New helper layers use the DXF nonplot flag.
-
-`DRAWING_SCALE` remains a positive number in project data. It is the denominator
-`N` of a dimensionless `1:N` scale ratio. This representation applies equally
-to Imperial and Metric projects and does not depend on AutoCAD's current
-annotation scale.
-
-### Plant data
-
-The shared Master Plant Catalog is stored at
-`data/terratools-plant-master.dat`, relative to the TerraTools installation
-folder. It is a schema-versioned AutoLISP S-expression and contains original
-sample records. Plant database functions handle all catalog access.
-
-Each project's selected plants are stored under the additive `PLANT_PALETTE`
-key in that project's existing `terratools-project.dat` file. A project made
-before the planting module has no such key and loads with an empty palette.
-Each palette record has its own project plant UUID, keeps its Master Plant ID,
-and contains a project-specific copy of the editable specifications.
-
-### Load in AutoCAD LT
-
-1. Keep `TerraTools.lsp` and its `core/`, `planting/`, and `data/` folders
-   together in the installation folder. Folder names may contain spaces.
-2. Run `OPTIONS`. On the Files tab, add the installation folder to **Support
-   File Search Path**. Under **Trusted Locations**, add the installation folder
-   with `\...` at the end, for example `<TerraTools installation folder>\...`.
-   The trailing backslash and three dots make its subfolders, including `core/`,
-   trusted. Apply the changes. Keep the existing security settings.
-3. If AutoCAD LT already reported `File load canceled` for a TerraTools file,
-   close and restart AutoCAD LT after updating Trusted Locations. AutoCAD can
-   remember a rejected load for the rest of the current session.
-4. Run `APPLOAD`, select `TerraTools.lsp` in that installation, and click Load.
-   Close the APPLOAD dialog. If a file picker asks you to locate the loader,
-   select that same `TerraTools.lsp` file.
-5. Expect `TerraTools LT 0.1.0 ready. Commands: TTHELLO, TTDEBUG.` in the command
-   history. Press F2 if needed to see the complete output.
-
-The loader finds `TerraTools.lsp` through AutoCAD's file search paths, or asks
-for its location if it cannot be found. It loads every module by explicit
-path relative to that file's folder. Keep only one TerraTools installation on
-the search paths, since the first matching loader determines the root.
-
-After the initial `APPLOAD`, run `TTRELOAD` to reload that exact TerraTools
-installation after editing source files. Run `TTDEVSMOKE` for a read-only check
-of the loaded core, project data, preferences, scale, and planting data.
-
-### Manual checks
-
-- Run `TTHELLO`. Expect exactly `TerraTools LT loaded successfully.` as the
-  command's message.
-- Run `TTDEBUG`. Expect TerraTools version `0.1.0`, AutoCAD product and version,
-  drawing filename and directory, current layer, numeric `INSUNITS`, and
-  `Core loaded successfully: Yes`. Values come from the current drawing and
-  AutoCAD session. An unavailable value is printed as `Unavailable`; an empty
-  string is printed as `(empty)`.
-- Compare the diagnostic values with `(getvar "PRODUCT")`, `(getvar "ACADVER")`,
-  `(getvar "DWGNAME")`, `(getvar "DWGPREFIX")`, `(getvar "CLAYER")`, and
-  `(getvar "INSUNITS")`, entered separately at the command prompt.
-- Run `APPLOAD` on the same loader again, then repeat `TTHELLO` and `TTDEBUG`.
-  Expect the same successful results without duplicate output per command.
-- For a portability check, copy the complete installation to a folder with
-  spaces in its name. In a fresh LT session, update the support and trusted
-  paths to that copy, remove the original TerraTools path entries, and load
-  the copied loader. Both commands should still work. Enter `!*TT:Root*`
-  to inspect the resolved installation folder.
-- For a failure check, use a disposable installation copy. After a successful
-  load, rename its `core/tt-debug.lsp` to `tt-debug.lsp.disabled`, then reload
-  its loader. Expect a missing-file message naming that module, no readiness
-  message, and `(if *TT:CoreLoaded* "Yes" "No")` to return `"No"`. `TTHELLO`
-  must report that the core is not loaded. Restore the filename and reload;
-  expect normal operation again.
-
-Loading is per drawing; use `APPLOAD` in each drawing for these tests. Automatic
-startup installation is not included. Failed reloads mark the core unavailable
-but do not remove command definitions already loaded in that drawing.
-
-The Core, UUID/XData, project management, Preferences, standard-layer creation,
-and drawing scale milestones have passed real AutoCAD LT testing. The Master
-Plant Catalog and Project Plant Palette still require runtime testing in
-AutoCAD LT before this milestone is treated as stable.
+Known limits are documented in the [User Guide](docs/USER_GUIDE.md), especially directed irrigation topology, explicit critical-path selection, Xref read-only behavior, simple original symbols, and TEXT/MTEXT schedule output.

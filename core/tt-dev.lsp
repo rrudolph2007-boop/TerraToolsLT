@@ -67,7 +67,8 @@
 (defun C:TTDEVSMOKE
   (/ *error* passed result uuid association association-error project
      project-path preferences scale planting-loaded catalog master-plants
-     master-count palette palette-valid palette-count)
+     master-count palette palette-valid palette-count module-check fixture-master
+     irrigation-master work-areas work-area-count)
   (defun *error* (message)
     (TT:ReportError "TTDEVSMOKE" message))
 
@@ -232,6 +233,41 @@
       (TT:DevSmokeSkip "Master catalog validation" "Planting module unavailable.")
       (TT:DevSmokeSkip "Master catalog count" "Planting module unavailable.")
       (TT:DevSmokeSkip "Project palette" "Planting module unavailable.")))
+
+  (foreach module-check
+    '((*TT:ScheduleModuleLoaded* . "Schedule engine")
+      (*TT:SiteModuleLoaded* . "Site module")
+      (*TT:DetailsModuleLoaded* . "Details module")
+      (*TT:LightingModuleLoaded* . "Lighting module")
+      (*TT:HydraulicsModuleLoaded* . "Hydraulic engine")
+      (*TT:IrrigationModuleLoaded* . "Irrigation module")
+      (*TT:UIModuleLoaded* . "User interface"))
+    (if (not
+          (TT:DevSmokeCheck
+            (and (boundp (car module-check)) (eval (car module-check)))
+            (cdr module-check) "Module is not loaded."))
+      (setq passed nil)))
+
+  (setq fixture-master (vl-catch-all-apply 'TT:LightingMasterLoad nil))
+  (if (not (TT:DevSmokeCheck
+             (and (not (vl-catch-all-error-p fixture-master)) fixture-master)
+             "Master fixture catalog" "Catalog is missing or malformed."))
+    (setq passed nil))
+  (setq irrigation-master (vl-catch-all-apply 'TT:IrrigationMasterLoad nil))
+  (if (not (TT:DevSmokeCheck
+             (and (not (vl-catch-all-error-p irrigation-master)) irrigation-master)
+             "Irrigation equipment catalog" "Catalog is missing or malformed."))
+    (setq passed nil))
+  (if project
+    (progn
+      (setq work-areas (TT:WorkAreas project))
+      (setq work-area-count (if (eq (type work-areas) 'LIST) (length work-areas) 0))
+      (if (not (TT:DevSmokeCheck
+                 (or (null work-areas) (eq (type work-areas) 'LIST))
+                 (strcat "Work Areas (" (itoa work-area-count) " records)")
+                 "Project Work Area data is malformed."))
+        (setq passed nil)))
+    (TT:DevSmokeSkip "Work Areas" "No readable project is active."))
 
   (princ (strcat "\n\nSmoke test: " (if passed "PASS" "FAIL")))
   (princ)

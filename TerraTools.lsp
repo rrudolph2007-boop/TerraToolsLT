@@ -1,4 +1,4 @@
-;;; TerraTools LT 0.1.0 - application loader for AutoCAD LT 2024+ on Windows.
+;;; TerraTools LT 0.9.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
 ;;; Add the installation folder to the Support File Search Path, then APPLOAD
 ;;; this file. If it cannot be found there, select this file when prompted.
 ;;; The installation folder and loaded subfolders must be trusted by AutoCAD.
@@ -23,9 +23,16 @@
   (setq *TT:LoaderPathOverride* nil)
 
   ;; Clear readiness on every attempt, including a failed reload.
-  (setq *TT:Version* "0.1.0"
+  (setq *TT:Version* "0.9.0-rc1"
         *TT:CoreLoaded* nil
         *TT:PlantingModuleLoaded* nil
+        *TT:SiteModuleLoaded* nil
+        *TT:DetailsModuleLoaded* nil
+        *TT:LightingModuleLoaded* nil
+        *TT:IrrigationModuleLoaded* nil
+        *TT:HydraulicsModuleLoaded* nil
+        *TT:ScheduleModuleLoaded* nil
+        *TT:UIModuleLoaded* nil
         *TT:Root* nil
         loader-path requested-loader-path)
 
@@ -55,10 +62,24 @@
                       "core/tt-project.lsp"
                       "core/tt-preferences.lsp"
                       "core/tt-scale.lsp"
+                      "core/tt-data.lsp"
+                      "core/tt-smart.lsp"
                       "planting/tt-plant-db.lsp"
                       "planting/tt-plant-manager.lsp"
+                      "core/tt-reconcile.lsp"
+                      "core/tt-workarea.lsp"
+                      "planting/tt-plant-place.lsp"
+                      "planting/tt-plant-area.lsp"
+                      "planting/tt-plant-label.lsp"
+                      "schedules/tt-schedule-engine.lsp"
+                      "site/tt-site.lsp"
+                      "details/tt-details.lsp"
+                      "lighting/tt-lighting.lsp"
+                      "irrigation/tt-hydraulics.lsp"
+                      "irrigation/tt-irrigation.lsp"
                       "core/tt-debug.lsp"
-                      "core/tt-dev.lsp")
+                      "core/tt-dev.lsp"
+                      "core/tt-ui.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
       ;; names that could resolve to files in another support directory.
@@ -80,7 +101,7 @@
         (progn
           (setq *TT:CoreLoaded* T)
           (princ (strcat "\nTerraTools LT " *TT:Version*
-                         " ready. Commands: TTHELLO, TTDEBUG."))
+                         " ready. Type TT to open TerraTools."))
         )
       )
     )

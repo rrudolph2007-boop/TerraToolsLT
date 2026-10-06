@@ -68,6 +68,20 @@
     (TT:PrintValue "Preferences error" (TT:PreferencesLastError)))
   (TT:PrintValue "Planting Module Loaded"
     (if *TT:PlantingModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Schedule Engine Loaded"
+    (if *TT:ScheduleModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Site Module Loaded"
+    (if *TT:SiteModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Details Module Loaded"
+    (if *TT:DetailsModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Lighting Module Loaded"
+    (if *TT:LightingModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Hydraulic Engine Loaded"
+    (if *TT:HydraulicsModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "Irrigation Module Loaded"
+    (if *TT:IrrigationModuleLoaded* "Yes" "No"))
+  (TT:PrintValue "User Interface Loaded"
+    (if *TT:UIModuleLoaded* "Yes" "No"))
   (if *TT:PlantingModuleLoaded*
     (progn
       (setq master-catalog (TT:PlantMasterLoad))

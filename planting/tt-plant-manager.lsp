@@ -332,6 +332,19 @@
   (princ)
 )
 
+(defun TT:PlantProjectSelectionLabel (record)
+  (strcat (TT:PlantRecordValue record 'PLANT_CODE)
+          " | " (TT:PlantCategoryName (TT:PlantRecordValue record 'CATEGORY))
+          " | " (TT:PlantRecordValue record 'BOTANICAL_NAME)
+          " | " (TT:PlantRecordValue record 'COMMON_NAME))
+)
+
+(defun TT:PlantPromptProjectSelection (plants prompt)
+  (if plants
+    (TT:PromptNumberedRecord plants 'TT:PlantProjectSelectionLabel prompt)
+    nil)
+)
+
 (defun TT:PlantPrintError ()
   (if *TT:PlantLastError*
     (princ (strcat "\nTerraTools: " *TT:PlantLastError*)))
@@ -438,23 +451,19 @@
 )
 
 (defun TT:PlantCommandEdit
-  (/ palette plants master-id old updated input parsed valid)
+  (/ palette plants old updated input parsed valid)
   (setq palette (TT:PlantPaletteLoad))
   (cond
     ((null palette) (TT:PlantPrintError))
     ((null (setq plants (TT:PlantPaletteGetAllFromPalette palette)))
       (princ "\nThe Project Plant Palette is empty."))
     (T
-      (TT:PlantPrintPalette palette)
-      (setq master-id
-        (getstring T "\nMaster plant ID to edit <cancel>: "))
-      (if (equal master-id "")
+      (princ "\nSelect a Project Plant to edit:")
+      (setq old (TT:PlantPromptProjectSelection plants "Select plant number"))
+      (if (null old)
         (princ "\nEdit plant canceled.")
         (progn
-          (setq old (TT:PlantPaletteFindByMasterID plants master-id))
-          (if (null old)
-            (princ "\nThat Master Plant ID is not in the Project Plant Palette.")
-            (progn
+          (progn
               (setq updated old valid T)
               (setq input
                 (getstring T
@@ -517,7 +526,7 @@
                       palette (subst updated old plants)))
                   (if (TT:PlantPaletteSave palette)
                     (princ "\nProject Plant record updated.")
-                    (TT:PlantPrintError))))))))))
+                    (TT:PlantPrintError)))))))))
   (princ)
 )
 
@@ -528,23 +537,19 @@
   (reverse result)
 )
 
-(defun TT:PlantCommandRemove (/ palette plants master-id target answer)
+(defun TT:PlantCommandRemove (/ palette plants target answer)
   (setq palette (TT:PlantPaletteLoad))
   (cond
     ((null palette) (TT:PlantPrintError))
     ((null (setq plants (TT:PlantPaletteGetAllFromPalette palette)))
       (princ "\nThe Project Plant Palette is empty."))
     (T
-      (TT:PlantPrintPalette palette)
-      (setq master-id
-        (getstring T "\nMaster plant ID to remove <cancel>: "))
-      (if (equal master-id "")
+      (princ "\nSelect a Project Plant to remove:")
+      (setq target (TT:PlantPromptProjectSelection plants "Select plant number"))
+      (if (null target)
         (princ "\nRemove plant canceled.")
         (progn
-          (setq target (TT:PlantPaletteFindByMasterID plants master-id))
-          (if (null target)
-            (princ "\nThat Master Plant ID is not in the Project Plant Palette.")
-            (progn
+          (progn
               (initget "Yes No")
               (setq answer
                 (getkword "\nRemove this plant? [Yes/No] <No>: "))
@@ -556,7 +561,7 @@
                   (if (TT:PlantPaletteSave palette)
                     (princ "\nPlant removed from Project Plant Palette.")
                     (TT:PlantPrintError)))
-                (princ "\nRemove plant canceled."))))))))
+                (princ "\nRemove plant canceled.")))))))
   (princ)
 )
 

@@ -28,6 +28,13 @@
     ((eq key 'OBJECT_TYPE) "object_type")
     ((eq key 'CATALOG_ID) "catalog_id")
     ((eq key 'WORK_AREA_ID) "work_area_id")
+    ((eq key 'CIRCUIT) "circuit")
+    ((eq key 'CAPACITY_WATTS) "capacity_watts")
+    ((eq key 'STATION) "station")
+    ((eq key 'FLOW_GPM) "flow_gpm")
+    ((eq key 'DIAMETER_IN) "diameter_in")
+    ((eq key 'C_FACTOR) "c_factor")
+    ((eq key 'MANUAL_SIZE) "manual_size")
     (T nil)
   )
 )
@@ -40,6 +47,13 @@
     ((equal name "object_type") 'OBJECT_TYPE)
     ((equal name "catalog_id") 'CATALOG_ID)
     ((equal name "work_area_id") 'WORK_AREA_ID)
+    ((equal name "circuit") 'CIRCUIT)
+    ((equal name "capacity_watts") 'CAPACITY_WATTS)
+    ((equal name "station") 'STATION)
+    ((equal name "flow_gpm") 'FLOW_GPM)
+    ((equal name "diameter_in") 'DIAMETER_IN)
+    ((equal name "c_factor") 'C_FACTOR)
+    ((equal name "manual_size") 'MANUAL_SIZE)
     (T nil)
   )
 )
@@ -53,9 +67,10 @@
   )
 )
 
-(defun TT:XDataMetadataValidP (metadata / item keys valid)
+(defun TT:XDataMetadataValidP (metadata / item keys numeric-keys valid)
   (setq valid (TT:XDataStringValueP (cdr (assoc 'ENTITY_UUID metadata)))
-        keys '(PROJECT_UUID MODULE OBJECT_TYPE CATALOG_ID WORK_AREA_ID))
+        keys '(PROJECT_UUID MODULE OBJECT_TYPE CATALOG_ID WORK_AREA_ID CIRCUIT STATION)
+        numeric-keys '(CAPACITY_WATTS FLOW_GPM DIAMETER_IN C_FACTOR MANUAL_SIZE))
   (while (and valid keys)
     (setq item (assoc (car keys) metadata))
     (if (and item (not (TT:XDataStringValueP (cdr item))))
@@ -63,6 +78,10 @@
     )
     (setq keys (cdr keys))
   )
+  (while (and valid numeric-keys)
+    (setq item (assoc (car numeric-keys) metadata))
+    (if (and item (not (numberp (cdr item)))) (setq valid nil))
+    (setq numeric-keys (cdr numeric-keys)))
   valid
 )
 
@@ -72,7 +91,9 @@
   (if (and item key-name)
     (append data
       (list (cons 1000 key-name)
-            (cons 1000 (cdr item))))
+            (if (numberp (cdr item))
+              (cons 1040 (float (cdr item)))
+              (cons 1000 (cdr item)))))
     data
   )
 )
@@ -83,7 +104,8 @@
                 (cons 1000 "TT_ENTITY")
                 (cons 1070 *TT:XDataSchemaVersion*))
         keys '(ENTITY_UUID PROJECT_UUID MODULE OBJECT_TYPE
-               CATALOG_ID WORK_AREA_ID))
+               CATALOG_ID WORK_AREA_ID CIRCUIT CAPACITY_WATTS STATION
+               FLOW_GPM DIAMETER_IN C_FACTOR MANUAL_SIZE))
   (while keys
     (setq app-data (TT:XDataAppendField app-data (car keys) metadata)
           keys (cdr keys))
@@ -106,7 +128,7 @@
     (setq key-record (car items)
           value-record (cadr items))
     (if (and (= (car key-record) 1000)
-             (= (car value-record) 1000)
+             (member (car value-record) '(1000 1040 1070))
              (setq key (TT:XDataNameKey (cdr key-record))))
       (progn
         (setq result (append result (list (cons key (cdr value-record)))))
@@ -200,6 +222,10 @@
   (TT:PrintValue "Object type" (cdr (assoc 'OBJECT_TYPE metadata)))
   (TT:PrintValue "Catalog ID" (cdr (assoc 'CATALOG_ID metadata)))
   (TT:PrintValue "Work Area ID" (cdr (assoc 'WORK_AREA_ID metadata)))
+  (if (assoc 'CIRCUIT metadata) (TT:PrintValue "Circuit" (cdr (assoc 'CIRCUIT metadata))))
+  (if (assoc 'STATION metadata) (TT:PrintValue "Station" (cdr (assoc 'STATION metadata))))
+  (if (assoc 'FLOW_GPM metadata) (TT:PrintValue "Flow gpm" (cdr (assoc 'FLOW_GPM metadata))))
+  (if (assoc 'DIAMETER_IN metadata) (TT:PrintValue "Diameter in" (cdr (assoc 'DIAMETER_IN metadata))))
   (princ)
 )
 
