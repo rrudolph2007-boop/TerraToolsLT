@@ -121,8 +121,7 @@
     nil))
 
 (defun TT:PlantExternalGetAll (/ project paths path records)
-  (setq project (if (and (boundp '*TT:CurrentProject*) *TT:CurrentProject*)
-                  *TT:CurrentProject* (TT:ProjectCurrent))
+  (setq project (TT:ProjectCurrent)
         paths (if project (TT:ProjectValue project 'PLANT_DATA_PATHS)))
   (if (not (eq (type paths) 'LIST)) (setq paths nil))
   (foreach path paths
@@ -173,7 +172,14 @@
        (or (not favorites-only)
            (member (TT:PlantRecordValue (car entry) 'PLANT_ID) favorites))))
 
-(defun TT:PlantSearch (query category favorites-only / words favorites entry result project)
+(defun TT:PlantSearch (query category favorites-only / words favorites entry result project cache-key)
+  (setq project (TT:ProjectCurrent)
+        cache-key (list (getvar "DWGPREFIX") (getvar "DWGNAME")
+                    (if project (TT:ProjectValue project 'PROJECT_UUID))
+                    (if project (TT:ProjectValue project 'PLANT_DATA_PATHS))))
+  (if (or (not (boundp '*TT:PlantSearchContext*))
+          (not (equal cache-key *TT:PlantSearchContext*)))
+    (setq *TT:PlantSearchIndex* nil *TT:PlantSearchContext* cache-key))
   (if (null *TT:PlantSearchIndex*) (TT:PlantSearchBuildIndex))
   (setq words (TT:StringWords query)
         project (TT:ProjectCurrent)
@@ -230,7 +236,7 @@
     (TT:PromptNumberedRecord page-records 'TT:PlantSearchLabel "Select result number")
     nil))
 
-(defun C:TTPLANTSEARCH (/ *error* query category favorites-only results page pages visible option selected enriched)
+(defun C:TTPLANTSEARCHCLI (/ *error* query category favorites-only results page pages visible option selected enriched)
   (defun *error* (message) (TT:ReportError "TTPLANTSEARCH" message))
   (setq query (getstring T "\nPlant search words <all>: "))
   (initget "All Tree Shrub Groundcover Favorites")

@@ -28,3 +28,9 @@ temp/
 # AutoCAD crash / error-report artifacts
 acadlt.err
 ErrorReports/
+
+# Reproducible plant builds: publish separately, never raw downloads in Git
+data/plants/raw/
+data/plants/build/
+data/plants/production/
+artifacts/

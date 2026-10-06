@@ -2,7 +2,7 @@
 
 (setq *TT:PlantMasterFileName* "terratools-plant-master.dat"
       *TT:PlantMasterSchemaVersion* 1
-      *TT:PlantCategories* '(TREE SHRUB GROUNDCOVER)
+      *TT:PlantCategories* '(TREE SHRUB GROUNDCOVER PERENNIAL GRASS VINE PALM SUCCULENT AQUATIC OTHER)
       *TT:PlantLastError* nil)
 
 (defun TT:PlantSetError (message)
@@ -32,16 +32,14 @@
       (eq (type value) 'STR))
 )
 
-(defun TT:PlantCategoryFromValue (value / text)
+(defun TT:PlantCategoryFromValue (value / text category result)
   (cond
     ((member value *TT:PlantCategories*) value)
     ((eq (type value) 'STR)
       (setq text (strcase value))
-      (cond
-        ((equal text "TREE") 'TREE)
-        ((equal text "SHRUB") 'SHRUB)
-        ((equal text "GROUNDCOVER") 'GROUNDCOVER)
-        (T nil)))
+      (foreach category *TT:PlantCategories*
+        (if (equal text (vl-symbol-name category)) (setq result category)))
+      result)
     (T nil))
 )
 
@@ -91,7 +89,7 @@
     ((not (TT:PlantNonEmptyStringP
             (TT:PlantRecordValue record 'BOTANICAL_NAME)))
       (TT:PlantSetError "A Master Plant record has an invalid botanical name."))
-    ((not (TT:PlantNonEmptyStringP
+    ((not (TT:PlantOptionalStringP
             (TT:PlantRecordValue record 'COMMON_NAME)))
       (TT:PlantSetError "A Master Plant record has an invalid common name."))
     ((not (TT:PlantNonEmptyStringP
@@ -212,9 +210,9 @@
 
 (defun TT:PlantMasterFindByID (plant-id / plants)
   (setq plants (TT:PlantMasterGetAll))
-  (if plants
-    (TT:PlantMasterFindByIDInList plants plant-id)
-    nil)
+  (cond ((TT:PlantMasterFindByIDInList plants plant-id))
+        ((and (boundp '*TT:PlantDatabaseLoaded*) *TT:PlantDatabaseLoaded*)
+          (TT:PlantDatabaseRecord plant-id)))
 )
 
 (defun TT:PlantMasterFindByCategory (category / plants record matches)

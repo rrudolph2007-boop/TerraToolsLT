@@ -1,5 +1,7 @@
 terratools_main : dialog {
   label = "TerraTools LT";
+  : text { key = "context"; width = 54; }
+  : text { key = "status"; width = 54; }
   : boxed_column {
     label = "Project";
     : row {

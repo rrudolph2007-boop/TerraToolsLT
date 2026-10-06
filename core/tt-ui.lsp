@@ -18,12 +18,18 @@
         ((= choice 13) (C:TTPLANTDATA))
         ((= choice 14) (C:TTHELP))))
 
-(defun TT:MainDialog (/ path dialog-id choice result pair)
+(defun TT:MainDialog (/ path dialog-id choice result pair project)
   (setq path (TT:StorageJoinPath (TT:StorageJoinPath *TT:Root* "dialogs")
                                  "terratools-main.dcl"))
   (if (and (findfile path) (> (setq dialog-id (load_dialog path)) 0)
            (new_dialog "terratools_main" dialog-id))
     (progn
+      (setq project (TT:ProjectCurrent))
+      (set_tile "context" (strcat "Version " *TT:Version* " | "
+        (if project (TT:ProjectValue project 'PROJECT_NAME) "No active project")))
+      (set_tile "status" (if project "Project file validated and readable."
+        (if (TT:ProjectLastError) "Project unresolved. Open Project Info for the stored path."
+          "Create or open a project to start production work.")))
       (foreach pair '(("project" . 1) ("settings" . 2) ("workareas" . 3)
                       ("planting" . 4) ("site" . 5) ("details" . 6)
                       ("lighting" . 7) ("irrigation" . 8) ("schedules" . 9)

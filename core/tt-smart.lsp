@@ -146,7 +146,7 @@
     (progn
       (setq radius (TT:BulgeSegmentRadius start end bulge)
             theta (TT:BulgeIncludedAngle bulge))
-      (if radius (* radius (abs theta)) nil))))
+      (if radius (* radius (abs theta)) 0.0))))
 
 (defun TT:BulgeSegmentSignedArea (start end bulge / cross radius theta arc-area)
   ;; Green's theorem gives the chord term plus the signed circular segment.
@@ -157,7 +157,7 @@
     (progn
       (setq radius (TT:BulgeSegmentRadius start end bulge)
             theta (TT:BulgeIncludedAngle bulge)
-            arc-area (* 0.5 radius radius (- theta (sin theta))))
+            arc-area (if radius (* 0.5 radius radius (- theta (sin theta))) 0.0))
       (+ cross arc-area))))
 
 (defun TT:BulgeSegmentPoint (start end bulge distance-on-segment
@@ -215,23 +215,27 @@
     (if (<= remaining segment-length)
       (setq point (TT:BulgeSegmentPoint (car current) (car next) (cadr current) remaining))
       (setq remaining (- remaining segment-length) index (1+ index))))
-  (if point point (if vertices (car (car (last vertices))) nil)))
+  (if point point (if vertices (car (last vertices)) nil)))
 
-(defun TT:EntityPointAtDistance (entity requested / data type length center radius angle-start sweep)
+(defun TT:EntityPointAtDistance (entity requested / data type length center radius angle-start sweep point a b fraction elevation)
   (setq data (entget entity) type (cdr (assoc 0 data)) length (TT:EntityLength entity)
         requested (if length (max 0.0 (min requested length))))
   (cond
     ((equal type "LINE")
-      (polar (cdr (assoc 10 data))
-             (angle (cdr (assoc 10 data)) (cdr (assoc 11 data))) requested))
+      (setq a (cdr (assoc 10 data)) b (cdr (assoc 11 data))
+            fraction (if (> length 0.0) (/ requested length) 0.0))
+      (mapcar '(lambda (x y) (+ x (* fraction (- y x)))) a b))
     ((equal type "LWPOLYLINE")
-      (TT:PolylinePointAtDistance (TT:PolylineVertices entity)
-                                  (TT:PolylineClosedP entity) requested))
+      (setq point (TT:PolylinePointAtDistance (TT:PolylineVertices entity)
+                                  (TT:PolylineClosedP entity) requested)
+            elevation (cdr (assoc 38 data)))
+      (if point (trans (list (car point) (cadr point) (if elevation elevation 0.0)) entity 0)))
     ((equal type "ARC")
       (setq center (cdr (assoc 10 data)) radius (cdr (assoc 40 data))
             angle-start (cdr (assoc 50 data))
             sweep (TT:ArcSweep angle-start (cdr (assoc 51 data))))
-      (polar center (+ angle-start (* sweep (/ requested length))) radius))
+      (if (> length 0.0)
+        (trans (polar center (+ angle-start (* sweep (/ requested length))) radius) entity 0)))
     (T nil)))
 
 (defun TT:PolygonAreaFromPoints (points / vertices point)

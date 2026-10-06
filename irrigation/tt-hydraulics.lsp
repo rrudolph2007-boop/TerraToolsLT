@@ -13,7 +13,8 @@
            (numberp flow-gpm) (>= flow-gpm 0.0)
            (numberp diameter-in) (> diameter-in 0.0)
            (numberp c-factor) (> c-factor 0.0))
-    (/ (* 4.52 length-ft (expt flow-gpm 1.85))
+    ;; 4.52 yields psi for gpm/inches/feet. Convert that pressure to feet of head.
+    (/ (* 2.31 4.52 length-ft (expt flow-gpm 1.85))
        (* (expt c-factor 1.85) (expt diameter-in 4.87)))
     nil))
 

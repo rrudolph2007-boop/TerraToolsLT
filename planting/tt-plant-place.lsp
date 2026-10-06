@@ -292,8 +292,9 @@
 
 (defun TT:RandomUnit (/ value)
   (if (not (and (boundp '*TT:RandomSeed*) (numberp *TT:RandomSeed*)))
-    (setq *TT:RandomSeed* (fix (* (getvar "DATE") 1000000.0))))
-  (setq *TT:RandomSeed* (rem (+ (* 1103515245 *TT:RandomSeed*) 12345) 2147483647))
+    (setq *TT:RandomSeed* (max 1.0 (rem (getvar "MILLISECS") 2147483647.0))))
+  ;; Real arithmetic avoids signed 32-bit integer overflow; products stay exact.
+  (setq *TT:RandomSeed* (rem (* 16807.0 (max 1.0 (abs *TT:RandomSeed*))) 2147483647.0))
   (/ (float *TT:RandomSeed*) 2147483647.0))
 
 (defun TT:PlantApplyTransform (entity scale rotation / data)

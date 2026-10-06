@@ -1,4 +1,4 @@
-;;; TerraTools LT 0.10.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
+;;; TerraTools LT 0.11.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
 ;;; Add the installation folder to the Support File Search Path, then APPLOAD
 ;;; this file. If it cannot be found there, select this file when prompted.
 ;;; The installation folder and loaded subfolders must be trusted by AutoCAD.
@@ -24,7 +24,7 @@
   (setq *TT:LoaderPathOverride* nil)
 
   ;; Clear readiness on every attempt, including a failed reload.
-  (setq *TT:Version* "0.10.0-rc1"
+  (setq *TT:Version* "0.11.0-rc1"
         *TT:CoreLoaded* nil
         *TT:PlantingModuleLoaded* nil
         *TT:SiteModuleLoaded* nil
@@ -61,6 +61,7 @@
                       "core/tt-xdata.lsp"
                       "core/tt-storage.lsp"
                       "core/tt-project.lsp"
+                      "core/tt-recovery.lsp"
                       "core/tt-preferences.lsp"
                       "core/tt-scale.lsp"
                       "core/tt-units.lsp"
@@ -68,12 +69,15 @@
                       "core/tt-csv.lsp"
                       "core/tt-standards.lsp"
                       "core/tt-smart.lsp"
+                      "core/tt-geometry.lsp"
                       "planting/tt-plant-db.lsp"
                       "planting/tt-plant-manager.lsp"
                       "planting/tt-plant-search.lsp"
+                      "planting/tt-plant-library.lsp"
                       "core/tt-reconcile.lsp"
                       "core/tt-workarea.lsp"
                       "planting/tt-plant-place.lsp"
+                      "planting/tt-plant-tools.lsp"
                       "planting/tt-plant-area.lsp"
                       "planting/tt-plant-label.lsp"
                       "schedules/tt-schedule-engine.lsp"
@@ -82,10 +86,12 @@
                       "lighting/tt-lighting.lsp"
                       "irrigation/tt-hydraulics.lsp"
                       "irrigation/tt-irrigation.lsp"
+                      "irrigation/tt-network.lsp"
                       "core/tt-debug.lsp"
                       "core/tt-dev.lsp"
                       "core/tt-qa.lsp"
                       "core/tt-help.lsp"
+                      "planting/tt-plant-ui.lsp"
                       "core/tt-ui.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module

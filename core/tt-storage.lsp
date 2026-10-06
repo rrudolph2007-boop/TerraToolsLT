@@ -70,6 +70,23 @@
   (if (vl-catch-all-error-p result) nil result)
 )
 
+(defun TT:StorageDataTextP (text / index character depth quoted escaped comment started finished valid)
+  (setq index 1 depth 0 valid T)
+  (while (and valid (<= index (strlen text)))
+    (setq character (substr text index 1) index (1+ index))
+    (cond
+      (comment (if (= character "\n") (setq comment nil)))
+      (escaped (setq escaped nil))
+      (quoted (cond ((= character "\\") (setq escaped T)) ((= character "\"") (setq quoted nil))))
+      ((= character ";") (setq comment T))
+      ((member character '(" " "\t" "\r" "\n")))
+      (finished (setq valid nil))
+      ((= character "(") (setq depth (1+ depth) started T))
+      ((not started) (setq valid nil))
+      ((= character ")") (setq depth (1- depth)) (if (= depth 0) (setq finished T)))
+      ((= character "\"") (setq quoted T))))
+  (and valid started finished (= depth 0) (not quoted)))
+
 (defun TT:StorageReadWorker (path / stream line text value)
   (setq stream (open path "r"))
   (if (null stream)
@@ -83,7 +100,8 @@
       (if (equal text "")
         (TT:StorageSetError (strcat "Project file is empty: " path))
         (progn
-          (setq value (read text))
+          ;; Reject trailing forms and unbalanced input before READ; never EVAL data.
+          (setq value (if (TT:StorageDataTextP text) (read text)))
           (if (null value)
             (TT:StorageSetError
               (strcat "Project file contains no usable data: " path))

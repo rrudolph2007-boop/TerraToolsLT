@@ -5,11 +5,11 @@
 (defun TT:UnitName (value / text)
   (if (eq (type value) 'STR) (setq text (strcase (vl-string-trim " \t" value))))
   (cond
-    ((member text '("IN" "INCH" "INCHES")) 'INCHES)
-    ((member text '("FT" "FOOT" "FEET" "IMPERIAL" "ARCHITECTURAL")) 'FEET)
+    ((member text '("IN" "INCH" "INCHES" "\"")) 'INCHES)
+    ((member text '("FT" "FOOT" "FEET" "'")) 'FEET)
     ((member text '("MM" "MILLIMETER" "MILLIMETERS")) 'MILLIMETERS)
     ((member text '("CM" "CENTIMETER" "CENTIMETERS")) 'CENTIMETERS)
-    ((member text '("M" "METER" "METERS" "METRE" "METRES" "METRIC")) 'METERS)
+    ((member text '("M" "METER" "METERS" "METRE" "METRES")) 'METERS)
     (T nil)))
 
 (defun TT:INSUNITSName (/ code)
@@ -19,8 +19,7 @@
         ((= code 6) 'METERS) (T nil)))
 
 (defun TT:DrawingUnitName (/ project raw explicit ins system)
-  (setq project (if (and (boundp '*TT:CurrentProject*) *TT:CurrentProject*)
-                  *TT:CurrentProject* (TT:ProjectCurrent))
+  (setq project (TT:ProjectCurrent)
         raw (if project (TT:ProjectValue project 'UNITS))
         explicit (TT:UnitName raw)
         ins (TT:INSUNITSName)
@@ -31,7 +30,7 @@
     ((and ins (or (and (equal system "Imperial") (member ins '(INCHES FEET)))
                   (and (equal system "Metric") (member ins '(MILLIMETERS CENTIMETERS METERS))))) ins)
     (explicit explicit)
-    (ins ins)
+    ((and (null project) ins) ins)
     (T nil)))
 
 (defun TT:UnitMetersFactor (unit)
@@ -58,22 +57,56 @@
     (setq index (1+ index)))
   index)
 
-(defun TT:ParseDimension (value / text split number unit-text unit)
+(defun TT:StrictDecimal (text / index character digits dots valid)
+  (setq index 1 digits 0 dots 0 valid (> (strlen text) 0))
+  (while (and valid (<= index (strlen text)))
+    (setq character (substr text index 1))
+    (cond
+      ((member character '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+        (setq digits (1+ digits)))
+      ((equal character ".") (setq dots (1+ dots)))
+      ((and (= index 1) (member character '("+" "-"))))
+      (T (setq valid nil)))
+    (setq index (1+ index)))
+  (if (and valid (> digits 0) (<= dots 1)) (atof text) nil))
+
+(defun TT:ParseDimension (value / text split number unit-text unit feet tail inches)
   ;; Returns (numeric-value unit-or-nil). A missing unit means drawing units.
   (cond
     ((numberp value) (list value nil))
     ((and (eq (type value) 'STR)
           (not (equal (setq text (vl-string-trim " \t" value)) "")))
       (setq split (TT:DimensionNumberEnd text))
+      (if (setq feet (vl-string-search "'" text))
+        (progn
+          (setq number (TT:StrictDecimal (vl-string-trim " " (substr text 1 feet)))
+                tail (vl-string-trim " " (substr text (+ feet 2))))
+          (if (equal tail "") (if number (list number 'FEET))
+            (progn
+              (if (= (substr tail (strlen tail)) "\"")
+                (setq tail (vl-string-trim " " (substr tail 1 (1- (strlen tail))))))
+              (setq inches (TT:StrictDecimal tail))
+              (if (and number inches (>= inches 0.0) (< inches 12.0))
+                (list (+ number (* (if (< number 0.0) -1.0 1.0) (/ inches 12.0))) 'FEET)))))
       (if (= split 1)
         nil
         (progn
-          (setq number (atof (substr text 1 (1- split)))
+          (setq number (TT:StrictDecimal (substr text 1 (1- split)))
                 unit-text (vl-string-trim " \t" (substr text split))
                 unit (if (not (equal unit-text "")) (TT:UnitName unit-text)))
-          (if (and (not (equal unit-text "")) (null unit)) nil
-            (list number unit)))))
+          (if (or (null number) (and (not (equal unit-text "")) (null unit))) nil
+            (list number unit))))))
     (T nil)))
+
+(defun TT:ConvertVolume (value from-unit to-unit / factor)
+  (setq factor (TT:ConvertLength 1.0 from-unit to-unit))
+  (if (and (numberp value) factor) (* value factor factor factor)))
+
+(defun TT:FlowLPSToGPM (value)
+  (if (numberp value) (* value 15.850323141489)))
+
+(defun TT:PressureKPaToPSI (value)
+  (if (numberp value) (/ value 6.894757293168)))
 
 (defun TT:DimensionToDrawingUnits (value / parsed number source target)
   (setq parsed (TT:ParseDimension value))

@@ -46,7 +46,7 @@
     ((not (TT:PlantNonEmptyStringP
             (TT:PlantRecordValue record 'BOTANICAL_NAME)))
       (TT:PlantSetError "A Project Plant record has an invalid botanical name."))
-    ((not (TT:PlantNonEmptyStringP
+    ((not (TT:PlantOptionalStringP
             (TT:PlantRecordValue record 'COMMON_NAME)))
       (TT:PlantSetError "A Project Plant record has an invalid common name."))
     ((not (TT:PlantNonEmptyStringP
@@ -101,11 +101,6 @@
                   (strcat "The Project Plant Palette contains duplicate project plant ID: "
                           project-id))
                 (setq valid nil))
-              ((member master-id master-ids)
-                (TT:PlantSetError
-                  (strcat "The Project Plant Palette contains duplicate master plant ID: "
-                          master-id))
-                (setq valid nil))
               (T
                 (setq project-ids (cons project-id project-ids)
                       master-ids (cons master-id master-ids))))))
@@ -116,10 +111,10 @@
 (defun TT:PlantProjectSourceRecord (record / prior-error source)
   ;; Source lookup is diagnostic only. Project Plant data remains authoritative.
   (setq prior-error *TT:PlantLastError*
-        source (TT:PlantMasterFindByID
-                 (TT:PlantRecordValue record 'MASTER_PLANT_ID))
+        source (vl-catch-all-apply 'TT:PlantMasterFindByID
+                 (list (TT:PlantRecordValue record 'MASTER_PLANT_ID)))
         *TT:PlantLastError* prior-error)
-  source
+  (if (vl-catch-all-error-p source) nil source)
 )
 
 (defun TT:PlantProjectSourceStatus (record)
@@ -140,6 +135,8 @@
       (if masters
         (TT:PlantMasterFindByIDInList
           masters (TT:PlantRecordValue record 'MASTER_PLANT_ID))))
+    (if (and (null source) (wcmatch (TT:PlantRecordValue record 'MASTER_PLANT_ID) "WFO-*"))
+      (setq source (TT:PlantProjectSourceRecord record)))
     (if source
       (progn
         (setq available (1+ available))
@@ -200,8 +197,8 @@
         (TT:PlantSetError (TT:ProjectLastError)))))
 )
 
-(defun TT:PlantProjectRecordFromMaster (master)
-  (list
+(defun TT:PlantProjectRecordFromMaster (master / record field)
+  (setq record (list
     'PROJECT_PLANT
     (cons 'PROJECT_PLANT_ID (TT:GenerateUUID))
     (cons 'MASTER_PLANT_ID (TT:PlantRecordValue master 'PLANT_ID))
@@ -213,7 +210,12 @@
     (cons 'SPACING (TT:PlantRecordValue master 'SPACING))
     (cons 'UNIT_COST (TT:PlantRecordValue master 'UNIT_COST))
     (cons 'SYMBOL_BLOCK (TT:PlantRecordValue master 'SYMBOL_BLOCK))
-    (cons 'NOTES (TT:PlantRecordValue master 'NOTES)))
+    (cons 'NOTES (TT:PlantRecordValue master 'NOTES))))
+  ;; Preserve source facts and provenance in the project-owned snapshot.
+  (foreach field (cdr master)
+    (if (and (not (eq (car field) 'PLANT_ID)) (not (assoc (car field) (cdr record))))
+      (setq record (append record (list field)))))
+  record
 )
 
 (defun TT:PlantPaletteFindByMasterID (plants master-id / record found)
@@ -239,11 +241,7 @@
 )
 
 (defun TT:PlantCategoryName (category)
-  (cond
-    ((eq category 'TREE) "TREE")
-    ((eq category 'SHRUB) "SHRUB")
-    ((eq category 'GROUNDCOVER) "GROUNDCOVER")
-    (T "UNKNOWN"))
+  (if (member category *TT:PlantCategories*) (vl-symbol-name category) "UNCLASSIFIED")
 )
 
 (defun TT:PlantPrintMasterRecord (record)
@@ -387,16 +385,16 @@
 (defun TT:PlantPromptCategory (allow-all / keyword)
   (if allow-all
     (progn
-      (initget "All Tree Shrub Groundcover")
+      (initget "All Tree Shrub Groundcover Perennial Grass Vine Palm Succulent Aquatic Other")
       (setq keyword
         (getkword
-          "\nPlant category [All/Tree/Shrub/Groundcover] <All>: "))
+          "\nPlant category [All/Tree/Shrub/Groundcover/Perennial/Grass/Vine/Palm/Succulent/Aquatic/Other] <All>: "))
       (if (null keyword) (setq keyword "All")))
     (progn
-      (initget "Tree Shrub Groundcover")
+      (initget "Tree Shrub Groundcover Perennial Grass Vine Palm Succulent Aquatic Other")
       (setq keyword
         (getkword
-          "\nPlant category [Tree/Shrub/Groundcover] <cancel>: "))))
+          "\nPlant category [Tree/Shrub/Groundcover/Perennial/Grass/Vine/Palm/Succulent/Aquatic/Other] <cancel>: "))))
   (if (or (null keyword) (equal keyword "All"))
     (if (and allow-all (equal keyword "All")) 'ALL nil)
     (TT:PlantCategoryFromValue keyword))
@@ -595,7 +593,7 @@
   (princ)
 )
 
-(defun C:TTPLANTS (/ *error* project option)
+(defun C:TTPLANTSCLI (/ *error* project option)
   (defun *error* (message)
     (TT:ReportError "TTPLANTS" message))
   (setq project (TT:PlantCommandProject))
