@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TerraTools LT is a landscape architecture productivity toolkit built for AutoCAD LT on Windows.">
+  <title>TerraTools LT — Landscape Architecture Tools for AutoCAD LT</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav-shell">
+    <nav class="nav wrap" aria-label="Primary">
+      <a class="brand" href="#top" aria-label="TerraTools LT home">
+        <span class="brand-mark" aria-hidden="true">TT</span>
+        <span>TerraTools <strong>LT</strong></span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#plants">Plant database</a>
+        <a href="#install">Install</a>
+        <a href="#status">Status</a>
+        <a class="button button-small button-ghost" href="https://github.com/rrudolph2007-boop/TerraToolsLT" rel="noreferrer">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot"></span> 0.12.0 Release Candidate</div>
+        <h1>Landscape architecture tools built for <span>AutoCAD LT.</span></h1>
+        <p class="hero-lede">
+          TerraTools LT brings project-aware planting, site, details, lighting, irrigation,
+          schedules, Work Areas, and verification workflows to ordinary AutoCAD LT drawings.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/rrudolph2007-boop/TerraToolsLT/releases/latest">Download latest release</a>
+          <a class="button button-secondary" href="#install">Installation guide</a>
+        </div>
+        <p class="fine">Windows · AutoCAD LT 2024+ · Native AutoLISP/DCL · No external runtime service required</p>
+      </div>
+
+      <div class="hero-panel" aria-label="TerraTools overview">
+        <div class="window-bar">
+          <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <span>TerraTools | Home</span>
+        </div>
+        <div class="fake-ui">
+          <div class="ui-context">
+            <strong>Project: Campus Courtyard</strong>
+            <span>New placements: South Garden</span>
+          </div>
+          <div class="ui-banner">Open Plant Database: <strong>435,702 plants available</strong></div>
+          <div class="module-grid">
+            <div><span>01</span><strong>Plants</strong><small>Palette · placement · labels</small></div>
+            <div><span>02</span><strong>Work Areas</strong><small>Scope · assign · schedules</small></div>
+            <div><span>03</span><strong>Details</strong><small>Library · callouts · index</small></div>
+            <div><span>04</span><strong>Lighting</strong><small>Fixtures · circuits · loads</small></div>
+            <div><span>05</span><strong>Irrigation</strong><small>Pipe · flow · pressure</small></div>
+            <div><span>06</span><strong>Output</strong><small>Schedules · CSV · QA</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof wrap" aria-label="Product highlights">
+      <div><strong>435,702</strong><span>accepted plant taxa in the optional WFO database</span></div>
+      <div><strong>999,746</strong><span>linked aliases for plant search</span></div>
+      <div><strong>95</strong><span>documented engineering + UX acceptance scenarios</span></div>
+      <div><strong>LT-first</strong><span>ordinary DWG geometry with lightweight smart metadata</span></div>
+    </section>
+
+    <section class="section wrap" id="features">
+      <div class="section-heading">
+        <div class="eyebrow">One toolkit, one project model</div>
+        <h2>Production workflows without leaving AutoCAD LT.</h2>
+        <p>TerraTools keeps geometry ordinary and editable while adding project identity, reusable records, schedules, verification, and domain-specific tools.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="card">
+          <div class="icon">P</div>
+          <h3>Planting</h3>
+          <p>Project Plants, library search, variants, path/array/fill placement, mixes, density areas, labels, costs, schedules, favorites, and recent plants.</p>
+        </article>
+        <article class="card">
+          <div class="icon">W</div>
+          <h3>Work Areas</h3>
+          <p>Create explicit project scopes, assign smart objects, control new placements, filter schedules, and retain stable area identities.</p>
+        </article>
+        <article class="card">
+          <div class="icon">D</div>
+          <h3>Details & site</h3>
+          <p>Reference notes, callouts, measurements, concept boundaries, searchable detail records, renumbering, indexes, and user libraries.</p>
+        </article>
+        <article class="card">
+          <div class="icon">L</div>
+          <h3>Lighting</h3>
+          <p>Fixture palettes, placement, matching, circuits, transformers, connected loads, voltage-drop helpers, verification, and schedules.</p>
+        </article>
+        <article class="card">
+          <div class="icon">I</div>
+          <h3>Irrigation</h3>
+          <p>Directed pipe networks, stations, controllers, equipment, flow analysis, Hazen-Williams sizing, pressure paths, coverage, drip demand, and schedules.</p>
+        </article>
+        <article class="card">
+          <div class="icon">Q</div>
+          <h3>QA & recovery</h3>
+          <p>Verification, duplicate-identity reconciliation, backups, deliberate recovery, project packages, diagnostics, and deterministic calculation checks.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section split-section wrap" id="plants">
+      <div>
+        <div class="eyebrow">Optional open plant data</div>
+        <h2>Search a massive taxonomy without loading it all at startup.</h2>
+        <p>
+          TerraTools can use the World Flora Online June 2026 release as an optional local plant
+          source. Search is sharded and lazy, so the full dataset stays out of startup memory.
+        </p>
+        <div class="callout">
+          <strong>Important:</strong> WFO is a taxonomy source, not a horticultural specification library.
+          Review suitability, size, culture, and design criteria for your project.
+        </div>
+      </div>
+      <div class="data-card">
+        <div><span>Accepted taxa</span><strong>435,702</strong></div>
+        <div><span>Aliases</span><strong>999,746</strong></div>
+        <div><span>Generated taxonomy descriptions</span><strong>435,702</strong></div>
+        <div><span>License</span><strong>CC0-1.0</strong></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="install">
+      <div class="section-heading">
+        <div class="eyebrow">Get started</div>
+        <h2>Install in a few deliberate steps.</h2>
+      </div>
+      <ol class="steps">
+        <li><span>1</span><div><strong>Download TerraTools LT</strong><p>Use the latest GitHub release and extract the folder somewhere permanent.</p></div></li>
+        <li><span>2</span><div><strong>Trust the install folder</strong><p>Add the TerraTools folder and subfolders to AutoCAD LT's Support File Search Path and Trusted Locations.</p></div></li>
+        <li><span>3</span><div><strong>Load TerraTools.lsp</strong><p>Run APPLOAD, select <code>TerraTools.lsp</code>, then type <code>TT</code>.</p></div></li>
+        <li><span>4</span><div><strong>Run the checks</strong><p>Use <code>TTRELOAD</code>, <code>TTDEVSMOKE</code>, and <code>TTQACHECK</code> before production work.</p></div></li>
+        <li><span>5</span><div><strong>Optional: install WFO data</strong><p>Place the production plant package so <code>data/plants/production/manifest.dat</code> exists below the TerraTools root.</p></div></li>
+      </ol>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://github.com/rrudolph2007-boop/TerraToolsLT/releases/latest">Download TerraTools LT</a>
+        <a class="button button-secondary" href="https://github.com/rrudolph2007-boop/TerraToolsLT/blob/main/docs/USER_GUIDE.md">Read the user guide</a>
+      </div>
+    </section>
+
+    <section class="section status-section" id="status">
+      <div class="wrap status-inner">
+        <div>
+          <div class="eyebrow">Release status</div>
+          <h2>Serious release candidate. Still a release candidate.</h2>
+          <p>
+            TerraTools LT has broad implemented functionality and automated regression coverage,
+            but full visible-GUI acceptance across every supported LT version, theme, DPI setting,
+            and multi-drawing workflow is still in progress.
+          </p>
+        </div>
+        <div class="status-list">
+          <div><span class="status-ok"></span><strong>Core architecture</strong><small>Integrated</small></div>
+          <div><span class="status-ok"></span><strong>Plant search & project palettes</strong><small>Integrated</small></div>
+          <div><span class="status-ok"></span><strong>Hydraulics & network QA</strong><small>Automated checks passing</small></div>
+          <div><span class="status-warn"></span><strong>Cross-version GUI acceptance</strong><small>In progress</small></div>
+          <div><span class="status-warn"></span><strong>Manufacturer catalogs</strong><small>Not bundled</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="section-heading">
+        <div class="eyebrow">Positioning</div>
+        <h2>Built for the AutoCAD LT gap.</h2>
+        <p>
+          TerraTools LT is an independent project. It is not affiliated with, endorsed by, or a copy
+          of Land F/X. It uses original code, UI, formats, sample content, and a documented clean-room data model.
+        </p>
+      </div>
+      <div class="comparison">
+        <div>
+          <strong>TerraTools LT focuses on</strong>
+          <ul>
+            <li>AutoCAD LT compatibility</li>
+            <li>Ordinary editable DWG entities</li>
+            <li>Local/offline project data</li>
+            <li>Open-data plant search</li>
+            <li>Transparent, inspectable calculations</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Not currently claimed</strong>
+          <ul>
+            <li>Full Land F/X feature parity</li>
+            <li>Manufacturer-certified irrigation catalogs</li>
+            <li>11,000+ production block libraries</li>
+            <li>Cloud multi-user synchronization</li>
+            <li>CAD-to-3D platform synchronization</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">TT</span><span>TerraTools LT</span></div>
+      <p>Independent landscape architecture software for AutoCAD LT. Windows only.</p>
+      <div class="footer-links">
+        <a href="https://github.com/rrudolph2007-boop/TerraToolsLT">GitHub</a>
+        <a href="https://github.com/rrudolph2007-boop/TerraToolsLT/blob/main/README.md">Docs</a>
+        <a href="https://github.com/rrudolph2007-boop/TerraToolsLT/issues">Issues</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
