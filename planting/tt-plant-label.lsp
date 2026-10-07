@@ -14,7 +14,8 @@
   (setq project (TT:ProjectCurrent))
   (foreach item entities
     (setq metadata (cdr item))
-    (if (equal (cdr (assoc 'OBJECT_TYPE metadata)) "PLANT_INSTANCE")
+    (if (and (equal (cdr (assoc 'OBJECT_TYPE metadata)) "PLANT_INSTANCE")
+             (equal (cdr (assoc 'PROJECT_UUID metadata)) (TT:ProjectValue project 'PROJECT_UUID)))
       (progn
         (setq uuids (cons (cdr (assoc 'ENTITY_UUID metadata)) uuids)
               catalog-id (cdr (assoc 'CATALOG_ID metadata)))
@@ -84,7 +85,7 @@
 (defun C:TTUPDATEPLANTLABELS (/ *error* project items item updated invalid all-items)
   (defun *error* (message) (TT:ReportError "TTUPDATEPLANTLABELS" message))
   (setq project (TT:ProjectCurrent)
-        all-items (TT:SmartScan)
+        all-items (TT:ProjectItems (TT:SmartScan) project)
         items (TT:SmartFilter all-items "PLANTING" "PLANT_LABEL")
         updated 0 invalid 0)
   (if project

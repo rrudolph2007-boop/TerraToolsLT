@@ -580,32 +580,13 @@
 )
 
 (defun TT:PlantCommandRemove (/ palette plants target answer)
-  (setq palette (TT:PlantPaletteLoad))
-  (cond
-    ((null palette) (TT:PlantPrintError))
-    ((null (setq plants (TT:PlantPaletteGetAllFromPalette palette)))
-      (princ "\nThe Project Plant Palette is empty."))
-    (T
-      (princ "\nSelect a Project Plant to remove:")
+  (setq palette (TT:PlantPaletteLoad) plants (TT:PlantPaletteGetAllFromPalette palette))
+  (if plants
+    (progn
       (setq target (TT:PlantPromptProjectSelection plants "Select plant number"))
-      (if (null target)
-        (princ "\nRemove plant canceled.")
-        (progn
-          (progn
-              (initget "Yes No")
-              (setq answer
-                (getkword "\nRemove this plant? [Yes/No] <No>: "))
-              (if (equal answer "Yes")
-                (progn
-                  (setq palette
-                    (TT:PlantPaletteWithPlants
-                      palette (TT:PlantRemoveRecord plants target)))
-                  (if (TT:PlantPaletteSave palette)
-                    (princ "\nPlant removed from Project Plant Palette.")
-                    (TT:PlantPrintError)))
-                (princ "\nRemove plant canceled.")))))))
-  (princ)
-)
+      (if target (TT:PlantUIAction 4 target)))
+    (princ "\nNo project plants are available."))
+  (princ))
 
 (defun C:TTPLANTSCLI (/ *error* project option)
   (defun *error* (message)

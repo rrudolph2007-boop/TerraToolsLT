@@ -194,6 +194,7 @@
               (setq entity (ssname selection index)
                     metadata (TT:GetEntityXData entity))
               (if (and metadata
+                       (equal (cdr (assoc 'PROJECT_UUID metadata)) (TT:ProjectValue project 'PROJECT_UUID))
                        (not (equal (cdr (assoc 'OBJECT_TYPE metadata)) "WORK_AREA")))
                 (progn
                   (setq metadata (TT:SmartMetadataPut metadata 'WORK_AREA_ID id))

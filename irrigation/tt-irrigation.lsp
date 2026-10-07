@@ -230,7 +230,7 @@
 
 (defun TT:IrrigationEntityPoint (entity / data)
   (setq data (entget entity))
-  (cdr (assoc 10 data)))
+  (if (cdr (assoc 10 data)) (trans (cdr (assoc 10 data)) entity 0)))
 
 (defun TT:IrrigationPipeEndpoints (entity / data)
   (setq data (entget entity))
@@ -337,7 +337,7 @@
   (if (> merged 0) (setq ambiguous T))
   (list total rows disconnected ambiguous merged))
 
-(defun C:TTIRRIGATIONANALYZE (/ station analysis row result total)
+(defun TT:LegacyTTIRRIGATIONANALYZE (/ station analysis row result total)
   (setq station (getstring T "\nStation or zone to analyze: "))
   (if (not (equal station ""))
     (progn
@@ -354,7 +354,7 @@
         (princ "\nFlow propagated from each LINE start point toward its end point."))))
   (princ))
 
-(defun C:TTSIZEPIPE (/ length flow c maxv maxloss master class diameter)
+(defun TT:LegacyTTSIZEPIPE (/ length flow c maxv maxloss master class diameter)
   (setq length (getreal "\nDesign pipe length, feet: ")
         flow (if length (getreal "\nDesign flow, gpm: "))
         maxv (if flow (getreal "\nMaximum velocity, ft/s <5>: ")))
@@ -414,7 +414,7 @@
               (princ "\nPipe size updated.")))))))
   (princ))
 
-(defun C:TTZONEINFO (/ station analysis)
+(defun TT:LegacyTTZONEINFO (/ station analysis)
   (setq station (getstring T "\nStation or zone: "))
   (if (not (equal station ""))
     (progn (setq analysis (TT:IrrigationAnalyzeStation station))
@@ -453,7 +453,7 @@
   (princ (strcat "\nHighlighted " (itoa count) " object(s). REGEN clears highlighting."))
   (princ))
 
-(defun C:TTCRITICALPATH (/ selection index entity data station items pipes demand-items pipe-item branch flow max-flow result total available required elevation equipment total-required margin ambiguous length-feet)
+(defun TT:LegacyTTCRITICALPATH (/ selection index entity data station items pipes demand-items pipe-item branch flow max-flow result total available required elevation equipment total-required margin ambiguous length-feet)
   (princ "\nSelect smart pipes in the path to report.")
   (setq selection (ssget) total 0.0)
   (if selection
@@ -515,7 +515,7 @@
     (if area (princ "\nArea, depth, and station flow must be greater than zero.")))
   (princ))
 
-(defun C:TTIRRIGATIONSCHEDULE (/ project rows item data id record old point text count flow height layer length)
+(defun TT:LegacyTTIRRIGATIONSCHEDULE (/ project rows item data id record old point text count flow height layer length)
   (setq project (TT:ProjectCurrent))
   (if project
     (progn

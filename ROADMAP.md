@@ -1,31 +1,22 @@
 # TerraTools LT Roadmap
 
-## 0.10.0-rc1, parity sprint implemented, runtime acceptance pending
+## 0.12.0-rc1: repository closure, GUI acceptance pending
 
-- [x] Core loader, UUIDs, XData, project storage, preferences, layers, scale, reload, and diagnostics
-- [x] Master and project planting data, individual plants, areas, mixes, labels, Work Areas, schedules, costs, and CSV import/export
-- [x] COPY reconciliation and global smart-object tools
-- [x] Site reference notes, measurements, concept polygons, coordinate labels, slope, and spot annotations
-- [x] Project details, placements, callouts, renumbering, and indexes
-- [x] Lighting catalog/palette, fixtures, transformers, wires, circuits, loads, schedules, costs, and verification
-- [x] Irrigation catalog/palette, equipment, pipes, coverage, stations, schedules, and verification
-- [x] Bulge-aware LWPOLYLINE length/area and centralized unit conversions
-- [x] Directed irrigation topology, per-pipe downstream flow, Hazen-Williams calculations, sizing, and user-assisted critical-path reports
-- [x] Normalized plant-data schema, USDA CSV importer, separate user library, attached catalogs, indexed search, pagination, favorites, and recent IDs
-- [x] LINE/ARC/LWPOLYLINE plant paths, controlled scatter, and arbitrary percent/ratio mixes
-- [x] Reusable user standards exchange and managed Work Area lifecycle
-- [x] Site note costs/filtering, detail validation, lighting capacity, and voltage-drop helper
-- [x] Expanded DCL launcher, in-product help, deterministic QA, provenance, architecture, contribution, and 48 acceptance scenarios
+Implemented code includes project persistence and recovery, source-independent plant variants, a lazy WFO database, Plant Manager and shared record managers, polygon fill and density areas, plant label/schedule styles, directed irrigation pressure analysis, pipe classes and sizing scopes, station/controller records, coverage refresh, drip-area demand, packaging and limited adoption.
 
-## Before 1.0
+The closure work unifies central palette code validation, repairs coverage/drip metadata persistence, routes public irrigation analysis through the graph, adds reference callouts and scoped equipment schedules, fixes manager dependencies, and reduces duplicate-UUID scanning cost.
 
-- [ ] Complete all AutoCAD LT scenarios in `ACCEPTANCE_TESTS.md`
-- [ ] Fix runtime defects found during acceptance
-- [ ] Confirm DCL, DXF entity creation, command localization, and Undo behavior in each supported LT release
-- [ ] Validate representative Imperial and Metric project workflows
-- [ ] Run 1,000, 5,000, and 10,000 object performance checks and a large USDA catalog search
-- [ ] Decide whether automatic branched-network critical-path discovery is safe enough for 1.0
-- [ ] Build deeper manager dialogs, configurable label/schedule styles, density areas, and safe region fill
-- [ ] Add guided foreign-project reassociation with module-specific catalog validation
+## Release gates
 
-Version 1.0 is reserved for a release that has passed the documented runtime acceptance tests.
+- Run all 80 acceptance scenarios in visible AutoCAD LT, including 2024 and newer versions used by the team.
+- Verify dialog rendering, keyboard/cancel behavior, Undo, secure/trusted loading and multi-drawing isolation.
+- Check CAD persistence after saving and reopening newly created output.
+- Review engineering inputs against project source data. Fictional sample values are not specifications.
+- Choose a software license before public distribution. No license has been invented during closure.
+- Publish the separately verified optional WFO data artifact through an approved release process.
+
+## Deferred scope
+
+The exact remaining capabilities and reasons are in PARITY_MATRIX.md. Main deferrals are presentation graphics, symbol-library preview/favorites, broad manufacturer adapters, source-DWG detail insertion, office engineering defaults, equipment schedule column customization and composite foreign-object adoption. These remain visible gaps, not claims of LT impossibility.
+
+Version 1.0 requires real GUI/runtime acceptance and resolution of release-blocking results.

@@ -22,6 +22,15 @@ the local generated directory as a separate ZIP release asset, with its manifest
 and checksums. Raw archives and generated production data are intentionally ignored
 by Git. Do not substitute the samples for a missing production package.
 
+The local release artifact is `artifacts/terratools-wfo-2026-06.zip`, 190,947,344
+bytes, SHA-256 `474360c38d3cc43a1fc1797eb09a9659459af5c122742738d40531781fa680b9`.
+Its extracted production directory has 1,474 files totaling 1,135,555,979 bytes.
+The full verifier passed again during the 0.12.0-rc1 closure: 1,472 record/index
+files plus two manifests; accepted 435,702, aliases 999,746, descriptions 435,702.
+This is the same verified build from the previous sprint, not a fabricated new
+dataset. The build took 118.315 seconds in the development environment; that is
+one measured build, not a performance guarantee.
+
 ## Rebuild
 
 Optional development dependency: Node.js 22 or newer. Download the archive URL in

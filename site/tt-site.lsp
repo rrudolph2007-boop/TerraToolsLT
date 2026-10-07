@@ -15,9 +15,9 @@
 
 (defun TT:ReferenceNoteQuantityForArea (record work-area-id / id type item metadata entity value)
   (setq id (TT:DataValue record 'NOTE_ID) type (TT:DataValue record 'TYPE) value 0.0)
-  (foreach item (TT:SmartFilter (TT:SmartScan) "SITE" nil)
+  (foreach item (TT:SmartFilter (TT:ProjectItems (TT:SmartScan) (TT:ProjectCurrent)) "SITE" nil)
     (setq metadata (cdr item) entity (car item))
-    (if (and (equal id (cdr (assoc 'CATALOG_ID metadata)))
+    (if (and (not (equal (cdr (assoc 'OBJECT_TYPE metadata)) "REFNOTE_LABEL")) (equal id (cdr (assoc 'CATALOG_ID metadata)))
              (or (null work-area-id)
                  (equal work-area-id (cdr (assoc 'WORK_AREA_ID metadata)))))
       (cond ((eq type 'COUNT) (setq value (1+ value)))
@@ -33,7 +33,7 @@
 (defun TT:ReferenceNoteQuantity (record)
   (TT:ReferenceNoteQuantityForArea record nil))
 
-(defun C:TTREFNOTE (/ *error* project type code description depth unit-cost record records selection entity)
+(defun C:TTREFNOTE (/ *error* project type code description depth unit-cost record records selection entity old-data attached)
   (defun *error* (message) (TT:ReportError "TTREFNOTE" message))
   (setq project (TT:ProjectCurrent))
   (if project
@@ -56,10 +56,15 @@
                          (cons 'DEPTH (TT:SafeNumber depth 0.0))
                          (cons 'UNIT_COST (max 0.0 unit-cost)))
                 records (append (TT:ReferenceNotes project) (list record)))
-          (if (and (TT:SmartAttach entity project "SITE"
-                     (strcat "REFNOTE_" (strcase type)) (TT:DataValue record 'NOTE_ID) nil)
-                   (TT:ProjectSaveSection 'REFERENCE_NOTES records))
-            (princ "\nReference note created."))))))
+          (setq old-data (TT:GetEntityXData entity)
+                attached (TT:SmartAttach entity project "SITE"
+                  (strcat "REFNOTE_" (strcase type)) (TT:DataValue record 'NOTE_ID) nil))
+          (if attached
+            (if (TT:ProjectSaveSection 'REFERENCE_NOTES records)
+              (princ "\nReference note created.")
+              (progn
+                (if old-data (TT:SetEntityXData entity old-data) (TT:RemoveEntityXData entity))
+                (TT:ProjectPrintError))))))))
   (princ)
 )
 
@@ -169,7 +174,7 @@
       (TT:PrintValue "Slope percent" (* 100.0 (/ rise run)))
       (TT:PrintValue "Slope ratio (horizontal:vertical)"
         (if (equal rise 0.0 1e-12) "Level"
-          (strcat "1:" (rtos (/ run (abs rise)) 2 2))))
+          (strcat (rtos (/ run (abs rise)) 2 2) ":1")))
       (TT:PrintValue "Rise" rise) (TT:PrintValue "Run" run)))
   (princ)
 )

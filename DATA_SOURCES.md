@@ -4,6 +4,12 @@
 
 `data/terratools-plant-master.dat` contains 15 original fictional records made for TerraTools testing. Names, codes, costs, sizes, and notes are examples. They are not horticultural recommendations or construction pricing. No third-party plant photos are bundled.
 
+## Optional WFO production package
+
+The World Flora Online Plant List June 2026 release is available at [Zenodo record 20782718](https://zenodo.org/records/20782718), whose release metadata declares CC0. The exact archive URL, input filename and SHA-256 digests are tracked in `data/plants/sources/wfo-2026-06.json`.
+
+The locally built package contains 435,702 accepted species/infraspecific taxa and 999,746 linked synonyms. Synonyms are aliases, not extra accepted plants. All 435,702 generated descriptions are explicitly taxonomy-only. No images, horticultural recommendations or commercial descriptions are included. See `docs/PLANT_DATABASE.md` for installation, build, verification and distribution status. Generated data and raw downloads are ignored by Git; the optional package is separate from the software repository.
+
 ## USDA PLANTS import target
 
 TerraTools includes `TTIMPORTUSDA`, an optional runtime importer for a user-downloaded Complete PLANTS Checklist CSV. The official [USDA PLANTS download page](https://plants.sc.egov.usda.gov/downloads) describes a comma-delimited checklist with plant symbol, synonym symbol, scientific name with authors, national common name, and family. The importer copies only those supplied fields and source metadata. It leaves horticultural and design fields empty.

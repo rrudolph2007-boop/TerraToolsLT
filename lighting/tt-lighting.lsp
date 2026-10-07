@@ -318,7 +318,7 @@
           (setq rows (append rows (list (list key record 1))))))))
   rows)
 
-(defun C:TTLIGHTINGSCHEDULE (/ rows point text row count watts cost height layer)
+(defun TT:LegacyTTLIGHTINGSCHEDULE (/ rows point text row count watts cost height layer)
   (setq rows (TT:LightingSummary))
   (if (and rows (setq point (getpoint "\nLighting schedule insertion point: ")))
     (progn

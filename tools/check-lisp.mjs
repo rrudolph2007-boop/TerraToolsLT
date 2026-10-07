@@ -4,6 +4,7 @@ import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
 let errors = 0, count = 0;
 const names = new Map();
+const references = [];
 function audit(file) {
   const s = fs.readFileSync(file, 'utf8'); let i = 0, line = 1;
   function fail(m) { throw Error(`${file}:${line}: ${m}`); }
@@ -17,7 +18,10 @@ function audit(file) {
     if(c === '(') {
       const items = []; skip();
       while(s[i] !== ')') { if(i >= s.length) fail('unclosed list'); items.push(expr()); skip(); }
-      i++; return {items, line:start};
+      i++;
+      const dots = items.map((x,j)=>x.atom==='.'?j:-1).filter(j=>j>=0);
+      if(dots.length && (dots.length!==1 || dots[0]===0 || dots[0]!==items.length-2)) fail('malformed dotted pair');
+      return {items, line:start};
     }
     if(c === ')') fail('unexpected closing parenthesis');
     if(c === "'") return {quote:expr(),line:start};
@@ -28,11 +32,13 @@ function audit(file) {
     }
     let atom = c; while(i < s.length && !/[\s();']/.test(s[i])) atom += s[i++];
     if(!atom || /[`#]/.test(atom)) fail(`invalid reader token ${atom}`);
+    if (!['1+','1-'].includes(atom) && /^[+-]?\d/.test(atom) && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(atom)) fail(`malformed numeric token ${atom}`);
     return {atom:atom.toUpperCase(),line:start};
   }
   function walk(n, parent) {
     if(!n.items) return;
     const a=n.items, op=a[0]?.atom;
+    if(op && /^(?:TT:|C:TT)/.test(op)) references.push({name:op,file,line:n.line});
     const arity={IF:[3,4],SETQ:[3,9999],DEFUN:[3,9999],QUOTE:[2,2]};
     if(arity[op] && (a.length<arity[op][0] || a.length>arity[op][1]))
       throw Error(`${file}:${n.line}: wrong ${op} form length ${a.length}`);
@@ -40,6 +46,7 @@ function audit(file) {
     if(op==='DEFUN') {
       const name=a[1]?.atom, args=a[2]?.items;
       if(!name || !args || args.some(x=>!x.atom)) throw Error(`${file}:${n.line}: malformed DEFUN`);
+      if(args.filter(x=>x.atom==='/').length>1 || args.some(x=>x.atom!== '/' && /^[0-9.]|^T$|^NIL$/.test(x.atom))) throw Error(`${file}:${n.line}: invalid DEFUN argument`);
       if(name!=='*ERROR*') {
         if(parent) throw Error(`${file}:${n.line}: nested ${name}`);
         if(names.has(name)) throw Error(`${file}:${n.line}: duplicate ${name} from ${names.get(name)}`);
@@ -57,6 +64,7 @@ function files(dir) { for(const e of fs.readdirSync(dir,{withFileTypes:true})) {
   else if(e.name.endsWith('.lsp')) try {audit(f);} catch(e) {console.error(e.message); errors++;}
 } }
 files(root);
+for(const ref of references) if(!names.has(ref.name)) {console.error(`${ref.file}:${ref.line}: undefined ${ref.name}`);errors++;}
 const loader=fs.readFileSync(path.join(root,'TerraTools.lsp'),'utf8');
 for(const [,rel] of loader.matchAll(/"([^"\n]+\.lsp)"/g)) {
   if(!fs.existsSync(path.join(root,rel))) {console.error(`Missing loader module ${rel}`);errors++;}

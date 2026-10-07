@@ -16,3 +16,9 @@ TERRATOOLS entity XData schema 1 starts with `TT_ENTITY`, followed by the schema
 The current drawing association is TERRATOOLS XData on the Named Object Dictionary. It contains the project UUID, absolute project path, and a relative path when the drawing location permits one. Project load verifies that the external file is readable, validates it, and confirms its UUID. Missing files and UUID mismatches do not create replacement data.
 
 Normal AutoCAD COPY may duplicate XData. `TTRECONCILE` gives later copies new entity UUIDs while retaining their project and catalog meaning. Entity handles and block names have no identity role.
+
+In 0.12.0-rc1, PROJECT_PLANT_ID and case-insensitive PLANT_CODE are unique per palette save. MASTER_PLANT_ID is provenance and may repeat across deliberate variants. Existing conflicting codes remain readable so users can repair them. Source absence never invalidates an otherwise complete project copy.
+
+Other additive project sections include IRRIGATION_STATIONS, IRRIGATION_CONTROLLERS, PIPE_CLASSES and EQUIPMENT_SCHEDULES. Pipe metadata separates DIAMETER_IN (nominal), INSIDE_DIAMETER, PIPE_CLASS, MATERIAL and C_FACTOR. Legacy DIAMETER_IN remains the fallback when actual ID is absent. COVERAGE_SWEEP and PRESSURE_PSI are serialized operational XData fields. Coverage is derived from its head UUID, radius and sweep.
+
+Generated plant content is separate from source facts. The optional WFO package uses stable WFO IDs and identifies every generated description as TAXONOMY_ONLY with generation metadata. Manifest counts describe accepted records separately from aliases. This package is not embedded in the project or DWG.

@@ -41,6 +41,12 @@
   (reverse result)
 )
 
+(defun TT:ProjectItems (items project / item result)
+  (foreach item items
+    (if (and project (equal (cdr (assoc 'PROJECT_UUID (cdr item))) (TT:ProjectValue project 'PROJECT_UUID)))
+      (setq result (cons item result))))
+  (reverse result))
+
 (defun TT:SmartFindByUUID (uuid / item found)
   (foreach item (TT:SmartScan)
     (if (equal uuid (cdr (assoc 'ENTITY_UUID (cdr item))))

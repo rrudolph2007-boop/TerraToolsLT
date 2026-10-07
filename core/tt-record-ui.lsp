@@ -36,7 +36,9 @@
       (repeat 8
         (setq key (strcat "f" (itoa index)) field (nth index edit-fields))
         (if field
-          (progn (set_tile key (TT:UIValue (TT:DataValue edit-record (car field))))
+          (progn (set_tile key (if (and (null (TT:DataValue edit-record (car field)))
+                                       (eq (nth 2 field) 'NONNEGATIVE)) "0"
+                                (TT:UIValue (TT:DataValue edit-record (car field)))))
                  (set_tile (strcat "l" (itoa index)) (cadr field))
                  (mode_tile key 0))
           (mode_tile key 1))

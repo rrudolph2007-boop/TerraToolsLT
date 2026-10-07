@@ -2,7 +2,7 @@
 
 Status definitions: **IMPLEMENTED** means integrated production code exists. **PARTIAL** means a useful subset exists but the workflow is incomplete. **MISSING** means no working implementation exists. **LT-LIMITED** means AutoCAD LT prevents or materially constrains a dependable equivalent. This matrix describes the repository, not runtime verification.
 
-Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review only and still requires the AutoCAD LT acceptance suite.
+Closure review for `0.12.0-rc1`, 2026-10-06. Repository status is distinct from GUI acceptance. See RELEASE_CHECKLIST.md for actual execution evidence.
 
 ## Project Management
 
@@ -13,9 +13,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Missing project detection | IMPLEMENTED | Association remains unresolved without fabricating data. |
 | UUID mismatch detection | IMPLEMENTED | External record must match drawing association. |
 | Safe write and backup | IMPLEMENTED | Staging and `.bak` replacement. |
-| Project migration log | MISSING | Schema remains version 1. |
-| Project archive/package | MISSING | No resource packager. |
-| Recent projects | MISSING | No recent-project list. |
+| Project migration log | PARTIAL | Schema 1 identity migration is tested; no historical migration exists or runs, so no migration event log is needed yet. |
+| Project archive/package | IMPLEMENTED | TTPACKAGE creates a new folder with manifest and explicitly selected resources; DWG copying is manual. |
+| Recent projects | MISSING | Deferred convenience: no recent-project list; explicit Open remains available. |
 
 ## Plant Database
 
@@ -23,7 +23,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Schema-validated master catalog | IMPLEMENTED | Current catalog has 15 fictional sample records. |
 | Normalized professional record model | IMPLEMENTED | External schema supports taxonomy, cultural, size, use, and provenance fields without requiring them. |
-| Tens-of-thousands record support | PARTIAL | One-time full parse builds a compact session index; large-catalog LT timing is pending. |
+| Tens-of-thousands record support | IMPLEMENTED | Installed WFO build: 435,702 accepted taxa, 999,746 aliases; lazy record shards and token-prefix indexes. |
 | Open government data ingestion | IMPLEMENTED | `TTIMPORTUSDA` converts the official checklist fields; no USDA records are bundled. |
 | Source provenance per record | IMPLEMENTED | Normalized records carry source ID, URL, license note, attribution, and date fields. |
 | User custom plant library | IMPLEMENTED | Roaming user file is separate from distributed data. |
@@ -36,11 +36,11 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Add by category and number | IMPLEMENTED | Stable Master ID is retained internally. |
 | List, edit, remove | IMPLEMENTED | Project copies are independently editable. |
-| Duplicate protection | IMPLEMENTED | One Master Plant per project palette. |
+| Duplicate protection | IMPLEMENTED | Unique PROJECT_PLANT_ID and case-insensitive project code; MASTER_PLANT_ID may repeat for variants. |
 | Search before add | IMPLEMENTED | Multi-word indexed search with category/favorite filter and pagination. |
-| Favorites and recent plants | PARTIAL | Favorites have a search workflow; recent stable IDs are stored, but there is no recent-items browser yet. |
-| Batch edit | MISSING | One record at a time. |
-| Duplicate code validation | MISSING | IDs are validated; codes are not. |
+| Favorites and recent plants | IMPLEMENTED | Plant Manager includes Favorites and Recent Plants; project-owned source IDs persist. Unavailable sources are omitted. |
+| Batch edit | MISSING | Deferred: editing is one project record at a time; batch instance replacement already exists. |
+| Duplicate code validation | IMPLEMENTED | Central PlantPaletteSave guard covers DCL, CLI and code imports; existing conflicts remain readable for repair. |
 | User plant link | IMPLEMENTED | User and attached normalized IDs resolve through the same Master lookup. |
 
 ## Plant Symbols
@@ -51,10 +51,10 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Per-project symbol override | IMPLEMENTED | Stored on project plant record. |
 | Shared symbol families | IMPLEMENTED | Multiple records may use the same block. |
 | User block assignment | IMPLEMENTED | Project symbol field accepts a block name. |
-| Symbol scale controls | PARTIAL | Controlled random placement scale exists; no project symbol-scale manager. |
-| Symbol preview | MISSING | No preview DCL. |
-| Symbol favorites/categories | MISSING | No symbol catalog metadata. |
-| Missing-symbol verification/recovery | PARTIAL | Verification reports missing blocks; recreation is indirect. |
+| Symbol scale controls | IMPLEMENTED | TTPLANTSYMBOLS persists per-project-plant scale and refreshes existing INSERTs. |
+| Symbol preview | MISSING | Deferred visual polish: no symbol preview tile; placed symbols can be inspected in the DWG. |
+| Symbol favorites/categories | MISSING | Deferred separate symbol-library UX; project records already retain assigned block names. |
+| Missing-symbol verification/recovery | PARTIAL | TTPLANTSYMBOLS recreates generic defaults and refreshes assignments; missing custom block artwork cannot be reconstructed. |
 
 ## Plant Placement
 
@@ -63,12 +63,12 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Single and continuous placement | IMPLEMENTED | Repeated point loop. |
 | Straight-line fixed spacing | IMPLEMENTED | `TTPLANTLINE`. |
 | Rectangular array | IMPLEMENTED | `TTPLANTARRAY`. |
-| Naturalistic scatter | PARTIAL | Rectangular controlled scatter exists without polygon containment. |
+| Naturalistic scatter | IMPLEMENTED | Bounded seeded closed-XY polygon fill plus rectangular random scatter; supports sampled curved boundaries. |
 | Along polyline or arc | IMPLEMENTED | LINE, ARC, and bulged LWPOLYLINE paths use authoritative geometry. |
 | Equal spacing on path | IMPLEMENTED | Open and closed paths distribute requested counts without duplicate endpoints. |
-| Fill closed region | MISSING | No containment sampler. |
+| Fill closed region | IMPLEMENTED | TTPLANTFILL uses supported WCS XY boundaries, containment, spacing and bounded attempts. |
 | Random rotation and scale | IMPLEMENTED | User-entered scale and rotation ranges are applied to each INSERT. |
-| Work Area at placement | PARTIAL | Assignment is a later batch operation. |
+| Work Area at placement | IMPLEMENTED | TTACTIVEWORKAREA is project-UUID scoped; plant and shared-manager placements inherit it. |
 
 ## Plant Editing
 
@@ -77,10 +77,10 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Replace selected plant | IMPLEMENTED | Position, transform, UUID, and Work Area remain. |
 | Match selected plants | IMPLEMENTED | Source identity applies to targets. |
 | Highlight and locate | IMPLEMENTED | Transient highlight and zoom. |
-| Select similar | PARTIAL | Highlight exists; selection-set return is absent. |
+| Select similar | IMPLEMENTED | TTSELECTSIMILAR returns a selection set with project/module/type/catalog matching. |
 | Count project | IMPLEMENTED | Counts project plant identities. |
-| Count selected | MISSING | No selection-scoped counter. |
-| Count Work Area | PARTIAL | Internal filters exist; no focused count command. |
+| Count selected | IMPLEMENTED | TTCOUNTSELECTED counts selected plant INSERTs. |
+| Count Work Area | IMPLEMENTED | TTCOUNTWORKAREA reports derived planting quantities and assigned cross-module object counts. |
 | Batch replace | IMPLEMENTED | Match works on a selected set. |
 
 ## Plant Areas
@@ -92,7 +92,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Square spacing | IMPLEMENTED | Derived from current geometry. |
 | Triangular spacing | IMPLEMENTED | Uses 0.8660254 cell factor. |
 | Explicit spacing units | IMPLEMENTED | Inches, feet, millimeters, centimeters, and meters convert to drawing units. |
-| Density-based quantity | MISSING | Spacing only. |
+| Density-based quantity | IMPLEMENTED | TTDENSITYAREA uses project-variant density per square foot or square meter, with live boundary area. |
 | Boundary edit recalculation | IMPLEMENTED | Query and schedules recalculate. |
 
 ## Plant Mixes
@@ -114,9 +114,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Quantity update after deletion | IMPLEMENTED | Live UUID lookup. |
 | Orphan detection | IMPLEMENTED | Invalid project label records are reported. |
 | Mixed-species guard | IMPLEMENTED | Group must share one Project Plant. |
-| Common/botanical-name fields | MISSING | Fixed quantity and code text. |
-| Configurable label styles | MISSING | Text height and layer only. |
-| Optional leader geometry | MISSING | TEXT only. |
+| Common/botanical-name fields | IMPLEMENTED | TTLABELSTYLE selects quantity/code/name/size/spacing fields used in label output and refresh. |
+| Configurable label styles | IMPLEMENTED | Project preference style; exchanged through office standards. |
+| Optional leader geometry | PARTIAL | Optional ordinary LINE leader is created; automatic retargeting after moving plants/labels remains deferred. |
 | Update after code edit | IMPLEMENTED | Refresh resolves current project code. |
 
 ## Plant Schedules
@@ -127,9 +127,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Individual and area quantities | IMPLEMENTED | Mix components included. |
 | Work Area filtering | IMPLEMENTED | Explicit assignment filter. |
 | Schedule update | IMPLEMENTED | Existing entity text is replaced. |
-| Configurable columns | MISSING | Fixed column set. |
-| Sort and grouping choices | MISSING | Palette order only. |
-| Reusable schedule style | MISSING | Width and headings are fixed. |
+| Configurable columns | IMPLEMENTED | TTSCHEDULESTYLE selects and orders supported plant schedule columns. |
+| Sort and grouping choices | IMPLEMENTED | Plant schedules sort by selected field and optionally group by category; equal rows retained. |
+| Reusable schedule style | IMPLEMENTED | Project preference style includes title, columns, sort/group and width; office-standard exchange includes it. |
 | Multiple independent schedules | IMPLEMENTED | Each stores its own Work Area filter. |
 
 ## Plant Costing
@@ -141,7 +141,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Work Area totals | IMPLEMENTED | Explicit scope prompt. |
 | Project total | IMPLEMENTED | Derived current total. |
 | Cost CSV | IMPLEMENTED | Schedule export includes costs. |
-| Cost escalation/alternates | MISSING | No estimating model beyond unit cost. |
+| Cost escalation/alternates | MISSING | Deferred estimating scope; project-specific unit costs and variants cover current production needs. |
 
 ## Plant Verification
 
@@ -152,7 +152,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Missing symbols | IMPLEMENTED | Block table check. |
 | Invalid Work Areas | IMPLEMENTED | Explicit IDs checked. |
 | Invalid labels | IMPLEMENTED | Project label record lookup. |
-| Duplicate plant codes | MISSING | Not checked. |
+| Duplicate plant codes | IMPLEMENTED | TTVERIFY reports central case-insensitive duplicate-code results. |
 | Foreign project UUID | IMPLEMENTED | Global verification compares entity and active project UUIDs. |
 
 ## Plant Presentation
@@ -160,9 +160,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Capability | Status | Notes |
 |---|---|---|
 | Temporary species highlight | IMPLEMENTED | `TTHIGHLIGHTPLANT`. |
-| Category/species colorization | MISSING | No reversible presentation state. |
-| Canopy display modes | MISSING | One generated symbol per assigned block. |
-| Groundcover graphic treatment | PARTIAL | Boundary layer assignment only. |
+| Category/species colorization | MISSING | Deferred presentation mode; transient species highlighting already preserves drawing properties. |
+| Canopy display modes | MISSING | Deferred alternate graphics; current project block substitution is supported. |
+| Groundcover graphic treatment | PARTIAL | Smart boundary and quantities work; automatic presentation hatches/fills are deferred. |
 
 ## Site / Reference Notes
 
@@ -172,8 +172,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Notation and amenity notes | IMPLEMENTED | Count-like records. |
 | Materials and hardscape categories | IMPLEMENTED | Dedicated reference-note types are available. |
 | Note editing | IMPLEMENTED | Code, description, and project unit cost are editable. |
-| Renumber/code manager | PARTIAL | Individual codes can be edited; batch renumbering is absent. |
-| Labels/callouts | MISSING | Schedule only. |
+| Renumber/code manager | PARTIAL | Shared manager edits and checks codes individually; batch renumber is deferred. |
+| Labels/callouts | IMPLEMENTED | TTREFNOTELABEL and TTUPDATEREFNOTELABELS use project note identity; labels excluded from quantities. |
 | Work Area filtering | IMPLEMENTED | Reference schedules can use explicit Work Area assignment. |
 | Cost support | IMPLEMENTED | Project unit cost and derived subtotal are scheduled. |
 
@@ -183,7 +183,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | LINE and LWPOLYLINE length | IMPLEMENTED | Open, closed, straight, and bulged segments are supported. |
 | Closed polyline area | IMPLEMENTED | Positive, negative, and mixed bulges are supported. |
-| Perimeter | PARTIAL | Length command covers it without explicit label. |
+| Perimeter | IMPLEMENTED | TTLENGTH returns closed boundary perimeter, including bulges; no separate command required. |
 | Arc length | IMPLEMENTED | ARC and LWPOLYLINE arc segments use pure geometry. |
 | Volume from area/depth | IMPLEMENTED | Drawing-unit result. |
 | Bearing/distance | IMPLEMENTED | `TTBEARINGDIST` reports distance and clockwise-from-north azimuth. |
@@ -205,21 +205,21 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Capability | Status | Notes |
 |---|---|---|
 | Smart concept polygon | IMPLEMENTED | Named closed LWPOLYLINE. |
-| Concept area report | PARTIAL | General area command. |
-| Concept categories/styles | MISSING | One object type. |
-| Reversible presentation fills | MISSING | No hatch/color state. |
+| Concept area report | PARTIAL | Area measurement exists; a dedicated multi-zone concept schedule is deferred. |
+| Concept categories/styles | MISSING | Deferred concept presentation scope; named smart concept zones remain available. |
+| Reversible presentation fills | MISSING | Deferred visual treatment; semantic boundaries remain ordinary editable polylines. |
 
 ## Details
 
 | Capability | Status | Notes |
 |---|---|---|
 | Project detail records | IMPLEMENTED | Number, title, notes, template. |
-| Original detail placement | IMPLEMENTED | Generated demo frame. |
+| Original detail placement | PARTIAL | Generated original demo frame works; importing and arranging source DWG detail artwork is deferred pending GUI-safe insertion workflow. |
 | Callouts and renumber update | IMPLEMENTED | Derived TEXT updates. |
 | Detail index | IMPLEMENTED | Derived MTEXT. |
-| Categories and keywords | PARTIAL | Metadata can be stored and edited; dedicated search UI is absent. |
+| Categories and keywords | IMPLEMENTED | Details manager searches title, number, category and keywords. |
 | Source-file detection | IMPLEMENTED | Verification reports missing optional source DWGs. |
-| Office/user libraries | MISSING | Project library only. |
+| Office/user libraries | IMPLEMENTED | Shared validated user library supports Save/Add/Import/Export; project copies receive new identity. |
 | Duplicate-number verification | IMPLEMENTED | Add refuses duplicates and Verify reports persisted conflicts. |
 
 ## Lighting
@@ -231,7 +231,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Fixture placement and replacement | IMPLEMENTED | Smart INSERT identity. |
 | Wire and transformer graphics | IMPLEMENTED | Smart LINE/INSERT. |
 | Circuit assignment and load | IMPLEMENTED | Connected watt total. |
-| Match/count/highlight | MISSING | Global tools only. |
+| Match/count/highlight | IMPLEMENTED | TTMATCHFIXTURE, TTCOUNTLIGHTING and selected-record manager highlighting. |
 | Transformer capacity verification | IMPLEMENTED | Circuit load is compared with assigned transformer capacity. |
 | Voltage drop | IMPLEMENTED | Transparent copper two-conductor estimate supports common AWG sizes. |
 | Schedule and cost | IMPLEMENTED | Derived fixture totals. |
@@ -242,11 +242,11 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Schema-checked equipment catalog | IMPLEMENTED | Eight fictional records and one pipe class. |
 | Project irrigation palette | IMPLEMENTED | Add/list. |
-| Broad professional categories | PARTIAL | Core heads, drip, valve, controller, POC, regulator, sleeve. |
-| Manufacturer data import | MISSING | No adapter. |
-| User equipment library | MISSING | Distributed catalog only. |
-| Provenance/license fields | PARTIAL | Fictional samples are documented; equipment import schema remains limited. |
-| Multiple pipe classes | PARTIAL | Model allows lists; sample has one. |
+| Broad professional categories | PARTIAL | Eight fictional categories exist. Body/nozzle assemblies and further equipment-specific behavior are deferred pending suitable source data. |
+| Manufacturer data import | MISSING | Source blocked: no licensed manufacturer dataset or stable adapter specification supplied. Generic user library exchange is available. |
+| User equipment library | IMPLEMENTED | Irrigation manager Library uses validated separate user storage and project-owned copies. |
+| Provenance/license fields | PARTIAL | Unknown record fields are retained in library copies; no standardized manufacturer provenance importer exists. |
+| Multiple pipe classes | IMPLEMENTED | TTPIPECLASSES stores project classes with material, C and nominal:inside size pairs; legacy catalog IDs normalized on read. |
 
 ## Irrigation Placement
 
@@ -256,9 +256,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Mainline and lateral LINE | IMPLEMENTED | Directed smart pipe. |
 | Drip line | IMPLEMENTED | Existing LINE/LWPOLYLINE attachment. |
 | Coverage circle | IMPLEMENTED | Derived helper CIRCLE. |
-| Rotation and arc coverage | MISSING | Fixed block rotation and full circle. |
-| Drip area | MISSING | Drip line only. |
-| Coverage update | MISSING | Recreate manually. |
+| Rotation and arc coverage | IMPLEMENTED | TTIRRIGATIONCOVERAGE stores radius/sweep and uses head rotation for full-circle or ARC output. |
+| Drip area | IMPLEMENTED | TTDRIPAREA derives demand from area/row spacing/emitter spacing/flow; rerun on untagged edited boundary to recalculate. |
+| Coverage update | IMPLEMENTED | TTUPDATECOVERAGE recreates graphics from head metadata, deleting old graphics only after replacement succeeds. |
 | Sleeve placement | IMPLEMENTED | Catalog equipment INSERT. |
 
 ## Pipe Networks
@@ -266,13 +266,13 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Capability | Status | Notes |
 |---|---|---|
 | Directed start-to-end edges | IMPLEMENTED | LINE group 10 to 11. |
-| Endpoint tolerance | IMPLEMENTED | Fixed 0.01 drawing unit. |
-| Branch traversal | IMPLEMENTED | Recursive downstream scan. |
+| Endpoint tolerance | IMPLEMENTED | Unit-aware default 3.048 mm converted to drawing units, with explicit project override. |
+| Branch traversal | IMPLEMENTED | Operation-local directed graph aggregates downstream TO-node demand. |
 | Disconnected equipment | IMPLEMENTED | Endpoint connection check. |
-| Loop detection | IMPLEMENTED | Revisited UUID reports ambiguity. |
+| Loop detection | IMPLEMENTED | Leaf elimination detects directed cycles; automatic pressure/sizing refuses ambiguous topology. |
 | Merged-path ambiguity | IMPLEMENTED | Multiple incoming edges are counted and stop sizing/path output. |
-| Reverse-direction detection | MISSING | Direction is assumed from drawing order. |
-| Cached network graph | MISSING | Repeated list scans. |
+| Reverse-direction detection | IMPLEMENTED | Orphan/reversed branch and pipe-into-source diagnostics; TTREVERSEPIPE explicitly reverses LINE endpoints. |
+| Cached network graph | IMPLEMENTED | One operation-local graph is reused for flow/pressure/sizing; no stale persistent drawing graph cache. |
 
 ## Flow Analysis
 
@@ -280,7 +280,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Station demand | IMPLEMENTED | Sum of explicit flow fields. |
 | Per-pipe downstream demand | IMPLEMENTED | Analyzer, sizing, and selected paths use each edge's downstream demand. |
-| Branch flows | IMPLEMENTED | Recursive downstream accumulation. |
+| Branch flows | IMPLEMENTED | Directed graph downstream accumulation; branches retain distinct demand. |
 | Zero-demand pipes | IMPLEMENTED | Valid zero result. |
 | Ambiguous topology refusal | IMPLEMENTED | Sizing and selected critical path stop on loops, merges, or unresolved units. |
 | Flow persistence | IMPLEMENTED | Derived, not stored as authority. |
@@ -293,8 +293,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Velocity | IMPLEMENTED | Pure function. |
 | Friction and total loss | IMPLEMENTED | Elevation/equipment inputs supported. |
 | Invalid-input guards | IMPLEMENTED | Numeric and positive constraints. |
-| Metric calculations | MISSING | US customary only. |
-| Node pressures | MISSING | Path aggregate only. |
+| Metric calculations | IMPLEMENTED | TTHYDRAULICMETRIC converts SI input into the same US-customary core and converts results back. |
+| Node pressures | IMPLEMENTED | Pressure propagation includes friction, elevation, inline losses and terminal requirements; automatic critical route reported. |
 | Transparent documentation | IMPLEMENTED | Formula and assumptions documented. |
 
 ## Pipe Sizing
@@ -302,11 +302,11 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Capability | Status | Notes |
 |---|---|---|
 | Available-size recommendation | IMPLEMENTED | Smallest passing size. |
-| Velocity and loss criteria | IMPLEMENTED | Command defaults fixed at 5. |
-| Per-pipe downstream sizing | IMPLEMENTED | Selected smart pipe is sized from its recursive downstream demand. |
-| Manual override protection | IMPLEMENTED | Explicit confirmation required. |
-| Highlight undersized/excessive velocity | MISSING | No drawing report. |
-| Batch station sizing | MISSING | One pipe at a time. |
+| Velocity and loss criteria | IMPLEMENTED | User-entered positive limits; defaults 5 ft/s and 5 psi friction per pipe. |
+| Per-pipe downstream sizing | IMPLEMENTED | Each graph edge uses downstream TO demand and actual inside diameter. |
+| Manual override protection | IMPLEMENTED | Only MANUAL_SIZE=0 pipes are changed; TTPIPEAUTO explicitly changes size-control mode. |
+| Highlight undersized/excessive velocity | IMPLEMENTED | Sizing highlights failing/undersized pipes; no claim of complete design compliance. |
+| Batch station sizing | IMPLEMENTED | Recommend, Single, Selection, Station and Network scopes; manual sizes retained. |
 
 ## Valves / Stations
 
@@ -315,18 +315,18 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Station assignment | IMPLEMENTED | Batch selection writes XData. |
 | Zone flow and pipe count | IMPLEMENTED | Derived report. |
 | Station highlight | IMPLEMENTED | Transient redraw. |
-| Valve-to-station model | PARTIAL | Shared station string only. |
-| Zone pressure | PARTIAL | Manual path analysis. |
-| Zone verification | PARTIAL | General irrigation verifier. |
+| Valve-to-station model | PARTIAL | Valves share station name links; dedicated valve IDs and one-valve constraints are deferred. |
+| Zone pressure | IMPLEMENTED | TTAUTOCRITICALPATH prints node available pressure and margin for valid station trees. |
+| Zone verification | PARTIAL | Graph detects topology defects; comprehensive controller-to-placed-valve validation remains deferred. |
 
 ## Controllers
 
 | Capability | Status | Notes |
 |---|---|---|
 | Controller placement | IMPLEMENTED | Generic equipment record. |
-| Controller assignment | PARTIAL | Station string can be attached. |
-| Station capacity | MISSING | No controller capacity model. |
-| Duplicate station check | MISSING | No controller-specific validation. |
+| Controller assignment | IMPLEMENTED | Station records reference controller names and outputs; renames are refused until references are explicitly reassigned. |
+| Station capacity | IMPLEMENTED | Controller capacity guards station output and capacity edits. |
+| Duplicate station check | IMPLEMENTED | Unique station names and controller output assignment checked on manager save. |
 
 ## Drip
 
@@ -334,17 +334,17 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Point emitter equipment | IMPLEMENTED | Fictional drip record. |
 | Drip LINE/LWPOLYLINE | IMPLEMENTED | Explicit total flow and station. |
-| Drip area | MISSING | No area demand model. |
-| Emitter-spacing calculations | MISSING | Total flow is user-entered. |
+| Drip area | IMPLEMENTED | TTDRIPAREA derives demand from area/row spacing/emitter spacing/flow; rerun on untagged edited boundary to recalculate. |
+| Emitter-spacing calculations | IMPLEMENTED | Drip area count uses ceiling(area/(row spacing * emitter spacing)); gph converted to gpm. |
 
 ## Coverage
 
 | Capability | Status | Notes |
 |---|---|---|
 | Full-circle helper | IMPLEMENTED | Smart nonplot CIRCLE. |
-| Radius from equipment data | MISSING | User enters radius. |
-| Partial arcs | MISSING | No ARC coverage. |
-| Coverage refresh | MISSING | No update command. |
+| Radius from equipment data | IMPLEMENTED | Optional RADIUS_FT converts to drawing units; absent radius prompts explicitly. |
+| Partial arcs | IMPLEMENTED | Coverage sweep 0<angle<=360 persists in XData. |
+| Coverage refresh | IMPLEMENTED | Head UUID links helpers; refresh uses current head point/rotation and stored radius/sweep. |
 
 ## Irrigation Schedules
 
@@ -352,10 +352,10 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Equipment summary | IMPLEMENTED | Derived quantities and total flow. |
 | Pipe rows | IMPLEMENTED | Type, length, diameter. |
-| Station filtering | MISSING | Whole drawing only. |
-| Work Area filtering | MISSING | Whole drawing only. |
-| Configurable columns/style | MISSING | Fixed MTEXT. |
-| Existing schedule update | MISSING | Creation only. |
+| Station filtering | IMPLEMENTED | Equipment schedule scope retains station name in its project schedule record. |
+| Work Area filtering | IMPLEMENTED | Equipment schedules retain explicit Work Area scope and regenerate it. |
+| Configurable columns/style | PARTIAL | Plant style engine is configurable; equipment schedules retain fixed engineering columns. |
+| Existing schedule update | IMPLEMENTED | TTUPDATEEQUIPMENTSCHEDULE resolves stored scope and regenerates current quantities. |
 
 ## Runtime / Water Calculations
 
@@ -363,8 +363,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Area-depth-volume runtime | IMPLEMENTED | Uses 0.623 gal/sf/in. |
 | Zone flow integration | IMPLEMENTED | Current station demand. |
-| Precipitation-rate helper | MISSING | No arc/radius/nozzle model. |
-| Metric runtime | MISSING | US customary only. |
+| Precipitation-rate helper | MISSING | Deferred agronomic helper; nozzle distribution/overlap data is not modeled. |
+| Metric runtime | MISSING | Deferred adapter for watering helper; metric pipe hydraulics is available. |
 
 ## Work Areas
 
@@ -376,8 +376,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Rename | IMPLEMENTED | Manager edits the external Work Area record. |
 | Delete with dependency checks | IMPLEMENTED | Assigned objects block deletion; failed storage restores the boundary. |
 | Highlight and counts | IMPLEMENTED | Manager reports assignments and transiently highlights boundary and objects. |
-| Cross-module filtering | PARTIAL | Plant schedule/cost only. |
-| Geometric assignment helper | MISSING | Explicit assignment only. |
+| Cross-module filtering | IMPLEMENTED | Plants, reference notes and equipment schedules filter explicit Work Area links. |
+| Geometric assignment helper | MISSING | Deferred inference: Work Areas use explicit assignment and active placement context. |
 
 ## Office Standards
 
@@ -388,17 +388,17 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | User standard | IMPLEMENTED | Validated roaming user standard is separate from project data. |
 | Project override | IMPLEMENTED | Project preference values. |
 | Import/export | IMPLEMENTED | Validated S-expression exchange preserves preference schema. |
-| Irrigation/lighting/detail defaults | MISSING | General settings only. |
+| Irrigation/lighting/detail defaults | PARTIAL | Module roles and record-level settings exist; centralized office engineering defaults are not yet exposed. |
 
 ## Layer Standards
 
 | Capability | Status | Notes |
 |---|---|---|
-| Logical role mapping | IMPLEMENTED | Six planting/helper roles. |
+| Logical role mapping | IMPLEMENTED | Original six roles preserved; additive module roles and alias names resolve without migrating old preferences. |
 | Create missing layers | IMPLEMENTED | Existing layers are preserved. |
 | Color, linetype, plot intent | IMPLEMENTED | Stored per role. |
-| Lineweight | MISSING | No lineweight field. |
-| Module-specific roles | MISSING | Site, lighting, irrigation share helper layers. |
+| Lineweight | MISSING | Deferred office graphics preference; AutoCAD layer settings remain editable normally. |
+| Module-specific roles | PARTIAL | New manager/pipe/coverage/schedule paths use dedicated roles; some legacy annotation/graphics commands still use existing layers. |
 | Import/export | PARTIAL | Office standard exchange includes layer mappings; no layer-only format. |
 
 ## Annotation Standards
@@ -407,8 +407,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Text height | IMPLEMENTED | Project preference. |
 | Numeric precision | IMPLEMENTED | Project preference. |
-| Text style management | MISSING | Hard-coded STANDARD. |
-| Label style definitions | MISSING | No reusable style records. |
+| Text style management | MISSING | Deferred style selector; output uses existing STANDARD style. |
+| Label style definitions | IMPLEMENTED | Plant label preferences integrate with output and office-standard export/import. |
 | Scale-aware paper sizing | PARTIAL | Scale exists but most commands do not apply it. |
 
 ## Schedule Standards
@@ -417,8 +417,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | LT-compatible MTEXT schedules | IMPLEMENTED | No TABLE dependency. |
 | Schedule layer | IMPLEMENTED | Logical role. |
-| Reusable column/style definitions | MISSING | Fixed strings. |
-| Office schedule standards | MISSING | No user standard. |
+| Reusable column/style definitions | PARTIAL | Plant schedules support reusable definitions; full cross-module configurable rendering is deferred. |
+| Office schedule standards | IMPLEMENTED | Plant schedule style is part of exported/imported preferences. |
 
 ## Block / Symbol Management
 
@@ -427,7 +427,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Generate original simple blocks | IMPLEMENTED | CIRCLE, square, triangle families. |
 | Preserve user blocks | IMPLEMENTED | Existing block definitions are reused. |
 | Symbol validation | PARTIAL | Plant verification checks existence. |
-| Cross-module symbol catalog | MISSING | Names live on records. |
+| Cross-module symbol catalog | MISSING | Deferred library UX; block names remain on project records. |
 | Preview and substitution manager | PARTIAL | Global metadata substitution, no visual manager. |
 
 ## Import / Export
@@ -436,9 +436,9 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Plant schedule CSV export | IMPLEMENTED | Quoted fields. |
 | Plant-code palette CSV import | IMPLEMENTED | Header-aware parser accepts quoted Code fields and skips unknown/duplicates. |
-| Full CSV quoting/parser | PARTIAL | Commas, quotes, blanks, and headers work; quoted physical newlines are unsupported. |
-| Lighting/irrigation CSV | MISSING | No adapters. |
-| Reference note CSV | MISSING | No adapter. |
+| Full CSV quoting/parser | IMPLEMENTED | Shared parser handles commas, escaped quotes, blanks, headers and quoted physical newlines; malformed quoting rejected. |
+| Lighting/irrigation CSV | MISSING | Deferred adapters; validated S-expression library exchange is the supported record format. |
+| Reference note CSV | MISSING | Deferred adapter; project storage and derived schedule remain available. |
 | Office standard exchange | IMPLEMENTED | Standards use validated S-expression import/export. |
 
 ## Project Portability
@@ -446,10 +446,10 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Capability | Status | Notes |
 |---|---|---|
 | Relative installation resources | IMPLEMENTED | Loader root. |
-| Relative project association | IMPLEMENTED | Stored alongside absolute path. |
+| Relative project association | PARTIAL | Relative hint is stored; exact absolute association is authoritative. Reopen moved projects explicitly. |
 | Missing-path reporting | IMPLEMENTED | No silent search/adoption. |
-| Project package/resources | MISSING | No copier or manifest. |
-| WBLOCK reassociation | PARTIAL | Foreign project UUIDs are reported; safe guided reassociation is absent. |
+| Project package/resources | IMPLEMENTED | New-folder manifest package copies selected resources; packaged detail links become relative. Unselected links remain unchanged. |
+| WBLOCK reassociation | PARTIAL | TTADOPT resolves plants/fixtures/equipment only; labels, mixes, pipes and dependent objects are conservatively refused. |
 | Xref mutation | LT-LIMITED | Referenced content is treated as read-only. |
 
 ## Search / Filtering
@@ -460,17 +460,17 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Partial-name search | IMPLEMENTED | All query words match a compact uppercase text index. |
 | Multi-field plant filters | PARTIAL | Text, category, and favorites work; numeric/range filters are absent. |
 | Work Area schedule filter | IMPLEMENTED | Plant schedule and cost. |
-| Station filter | PARTIAL | Analysis/highlight only. |
-| Pagination | IMPLEMENTED | Search pages are limited to 20 results. |
+| Station filter | IMPLEMENTED | Analysis, sizing, highlight and persistent equipment-schedule scope. |
+| Pagination | IMPLEMENTED | DCL pages contain 30 records; CLI pages contain 20. WFO broad searches cap displayed matches. |
 
 ## Favorites / Recent Items
 
 | Capability | Status | Notes |
 |---|---|---|
 | Plant favorites | IMPLEMENTED | Project stores stable Master Plant IDs. |
-| Symbol favorites | MISSING | No storage. |
-| Recent plants | PARTIAL | The last 20 added stable IDs are stored; a recent-items browser is still missing. |
-| Recent projects | MISSING | No storage. |
+| Symbol favorites | MISSING | Deferred symbol-library convenience; project block assignments persist. |
+| Recent plants | IMPLEMENTED | Plant Manager Recent Plants resolves the stored last 20 source IDs; unavailable sources are omitted. |
+| Recent projects | MISSING | Deferred convenience: no recent-project list; explicit Open remains available. |
 
 ## Error Checking / Reconciliation / Recovery
 
@@ -482,7 +482,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Missing project UUID | IMPLEMENTED | Reported. |
 | Cross-module orphan records | PARTIAL | Plant/lighting checks are deeper than Site/Details. |
 | Failed storage recovery | IMPLEMENTED | Staging and backup restoration. |
-| Foreign-project reassociation | MISSING | No guided workflow. |
+| Foreign-project reassociation | PARTIAL | TTADOPT validates supported catalog IDs and replaces entity UUID; dependent composite objects remain unsupported. |
 
 ## Performance
 
@@ -491,8 +491,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | XData-filtered drawing scan | IMPLEMENTED | Global smart scans filter by app. |
 | Targeted selection for edits | IMPLEMENTED | Entity-first edit commands. |
 | Shared scan per report | PARTIAL | Some nested helpers rescan the drawing. |
-| Large catalog index | PARTIAL | Compact session index avoids repeat full-record search; first parse remains whole-file. |
-| 1k/5k/10k test fixtures | MISSING | No deterministic benchmark. |
+| Large catalog index | IMPLEMENTED | WFO token-prefix shards and lazy record lookup; startup does not parse 435,702 full records. |
+| 1k/5k/10k test fixtures | IMPLEMENTED | tools/benchmark.lsp creates disposable fixtures, measures and removes only its own objects, including error cleanup. |
 
 ## UI / UX
 
@@ -500,8 +500,8 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Main DCL launcher | IMPLEMENTED | Command-line fallback. |
 | Consistent numbered choices | IMPLEMENTED | Shared prompt helper. |
-| Searchable plant manager DCL | MISSING | Command-line category workflow. |
-| Module manager dialogs | MISSING | Launcher delegates to commands. |
+| Searchable plant manager DCL | IMPLEMENTED | Project/Sources/Favorites/Recent browser, 30-row paging, search, edit, variants, details and action refresh. GUI acceptance pending. |
+| Module manager dialogs | IMPLEMENTED | Shared record manager covers Work Areas, Reference Notes, Details, Lighting, Irrigation, Stations and Controllers. GUI acceptance pending. |
 | Quiet cancellation | PARTIAL | Many commands are quiet; behavior varies. |
 | Internal IDs hidden | IMPLEMENTED | Ordinary workflows use numbers/entities. |
 
@@ -511,7 +511,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | README, architecture, data, hydraulics guides | IMPLEMENTED | User, developer, architecture, model, formula, provenance, and release-readiness docs exist. |
 | In-product `TTHELP` | IMPLEMENTED | Module topics list primary workflows and commands. |
-| End-to-end acceptance tests | IMPLEMENTED | 48 release-candidate scenarios. |
+| End-to-end acceptance tests | IMPLEMENTED | 80 scenarios cover workflows, data safety, managers, graphs and GUI risks. |
 | Formula documentation | IMPLEMENTED | Hazen-Williams and runtime assumptions. |
 | Workflow-oriented user guide | IMPLEMENTED | Current project-to-production workflows and limits are documented. |
 
@@ -521,7 +521,7 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 |---|---|---|
 | Original fictional sample records | IMPLEMENTED | No claimed manufacturer or horticultural authority. |
 | Per-dataset provenance file | IMPLEMENTED | Root data-source file covers bundled and importable resources. |
-| Third-party license inventory | IMPLEMENTED | No third-party dataset is bundled; USDA import terms and image exclusion are recorded. |
+| Third-party license inventory | IMPLEMENTED | Optional WFO CC0 package has source manifest and checksums; no manufacturer or plant image data bundled. |
 | CONTRIBUTING guide | IMPLEMENTED | Runtime, data, review, and compatibility rules are documented. |
 | Architecture document | IMPLEMENTED | Runtime, data hierarchy, project, XData, search, and irrigation boundaries are recorded. |
 | Software license decision | MISSING | Must be chosen before public release. |
@@ -535,5 +535,5 @@ Final parity-sprint review for `0.10.0-rc1`. New sprint code has static review o
 | Optional startup loading | IMPLEMENTED | README documents AutoCAD LT's trusted APPLOAD Startup Suite workflow. |
 | Read-only smoke test | IMPLEMENTED | `TTDEVSMOKE`. |
 | Pure deterministic QA suite | IMPLEMENTED | `TTQACHECK` covers units, geometry, density, CSV, and hydraulics without drawing edits. |
-| Schema migration framework | MISSING | Additive schema 1 only. |
-| Real LT acceptance status | PARTIAL | Earlier foundation passed; release-candidate modules remain untested. |
+| Schema migration framework | IMPLEMENTED | Explicit current-schema identity boundary preserves unknown fields and refuses unsupported schemas; no invented legacy migrations. |
+| Real LT acceptance status | PARTIAL | LT 2027 Core Console regressions/QA pass; GUI, secure loading, Undo, multiple open drawings and LT 2024-2026 acceptance remain unrun. |

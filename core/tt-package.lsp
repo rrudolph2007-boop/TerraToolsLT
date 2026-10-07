@@ -1,7 +1,7 @@
 ;;; Folder packages use safe generated resource names; no archive extraction.
 (defun TT:PackageRelativePathP (path / parts part valid)
   (setq valid (and (eq (type path) 'STR) (> (strlen path) 0)
-    (not (vl-string-search ":" path)) (not (member (substr path 1 1) '("/" "\\")))))
+    (not (vl-string-search ":" path)) (not (vl-string-search ".." path)) (not (member (substr path 1 1) '("/" "\\")))))
   (if valid
     (progn
       (setq parts (TT:StringWords (vl-string-translate "/\\" "  " path)))
@@ -83,7 +83,7 @@
   (setq project (TT:ProjectCurrent) count 0 skipped 0)
   (if project
     (progn
-      (princ "\nSelect foreign objects to adopt. Only existing project record IDs can resolve; unresolved Work Area links are cleared.")
+      (princ "\nSelect foreign objects to adopt. Existing project record IDs must resolve. Circuit/station assignments and unresolved Work Area links are cleared; reassign them in this project.")
       (setq selection (ssget "_:L") index 0)
       (if selection
         (while (< index (sslength selection))
@@ -92,12 +92,16 @@
             resolved (cond
               ((and (equal module "PLANTING") (member type '("PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR" "PLANT_AREA_DENSITY"))) (TT:PlantFindProjectByID id))
               ((and (equal module "LIGHTING") (equal type "FIXTURE")) (TT:LightingFind (TT:LightingPalette project) id))
-              ((and (equal module "IRRIGATION") (not (TT:IrrigationPipeP data))) (TT:IrrigationFind (TT:IrrigationPalette project) id))))
+              ((and (equal module "IRRIGATION")
+                    (member type '("SPRAY_HEAD" "ROTOR" "DRIP" "VALVE" "CONTROLLER" "POC" "FILTER_REGULATOR" "SLEEVE")))
+                (TT:IrrigationFind (TT:IrrigationPalette project) id))))
           (if (and data resolved (not (equal (cdr (assoc 'PROJECT_UUID data)) (TT:ProjectValue project 'PROJECT_UUID))))
             (progn
               (setq updated (TT:SmartMetadataPut data 'PROJECT_UUID (TT:ProjectValue project 'PROJECT_UUID))
                     updated (TT:SmartMetadataPut updated 'ENTITY_UUID (TT:GenerateUUID)))
               (if (not (TT:WorkAreaFind project (cdr (assoc 'WORK_AREA_ID data)))) (setq updated (vl-remove (assoc 'WORK_AREA_ID updated) updated)))
+              (setq updated (vl-remove (assoc 'STATION updated) updated)
+                    updated (vl-remove (assoc 'CIRCUIT updated) updated))
               (if (TT:SetEntityXData entity updated) (setq count (1+ count)) (setq skipped (1+ skipped))))
             (setq skipped (1+ skipped)))))))
   (TT:PrintValue "Adopted" count) (TT:PrintValue "Unchanged" skipped) (princ))

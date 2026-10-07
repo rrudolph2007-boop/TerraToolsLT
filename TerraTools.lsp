@@ -1,14 +1,27 @@
-;;; TerraTools LT 0.11.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
+;;; TerraTools LT 0.12.0-rc1 - application loader for AutoCAD LT 2024+ on Windows.
 ;;; Add the installation folder to the Support File Search Path, then APPLOAD
 ;;; this file. If it cannot be found there, select this file when prompted.
 ;;; The installation folder and loaded subfolders must be trusted by AutoCAD.
+
+(defun TT:ClearReadiness ()
+  (setq *TT:CoreLoaded* nil *TT:PlantingModuleLoaded* nil
+    *TT:SiteModuleLoaded* nil *TT:DetailsModuleLoaded* nil
+    *TT:LightingModuleLoaded* nil *TT:IrrigationModuleLoaded* nil
+    *TT:HydraulicsModuleLoaded* nil *TT:ScheduleModuleLoaded* nil
+    *TT:UIModuleLoaded* nil *TT:RecordUIModuleLoaded* nil
+    *TT:MigrationModuleLoaded* nil *TT:PlantUIModuleLoaded* nil
+    *TT:PlantDatabaseLoaded* nil *TT:NetworkModuleLoaded* nil
+    *TT:RecoveryModuleLoaded* nil *TT:GeometryModuleLoaded* nil
+    *TT:PlantSearchModuleLoaded* nil *TT:StandardsModuleLoaded* nil
+    *TT:UnitsModuleLoaded* nil *TT:CSVModuleLoaded* nil
+    *TT:QAModuleLoaded* nil *TT:HelpModuleLoaded* nil))
 
 (defun TT:Load
   (/ *error* requested-loader-path loader-path module-path modules module-name ok)
   ;; A local handler also covers failures before tt-errors.lsp is available.
   ;; Localizing *error* restores the caller's handler when this function exits.
   (defun *error* (message)
-    (setq *TT:CoreLoaded* nil)
+    (TT:ClearReadiness)
     (if module-name
       (princ (strcat "\nTerraTools load failed in: " module-name))
       (princ "\nTerraTools LT loader failed."))
@@ -24,7 +37,7 @@
   (setq *TT:LoaderPathOverride* nil)
 
   ;; Clear readiness on every attempt, including a failed reload.
-  (setq *TT:Version* "0.11.0-rc1"
+  (setq *TT:Version* "0.12.0-rc1"
         *TT:CoreLoaded* nil
         *TT:PlantingModuleLoaded* nil
         *TT:SiteModuleLoaded* nil
@@ -34,6 +47,19 @@
         *TT:HydraulicsModuleLoaded* nil
         *TT:ScheduleModuleLoaded* nil
         *TT:UIModuleLoaded* nil
+        *TT:RecordUIModuleLoaded* nil
+        *TT:MigrationModuleLoaded* nil
+        *TT:PlantUIModuleLoaded* nil
+        *TT:PlantDatabaseLoaded* nil
+        *TT:NetworkModuleLoaded* nil
+        *TT:RecoveryModuleLoaded* nil
+        *TT:GeometryModuleLoaded* nil
+        *TT:PlantSearchModuleLoaded* nil
+        *TT:StandardsModuleLoaded* nil
+        *TT:UnitsModuleLoaded* nil
+        *TT:CSVModuleLoaded* nil
+        *TT:QAModuleLoaded* nil
+        *TT:HelpModuleLoaded* nil
         *TT:Root* nil
         loader-path requested-loader-path)
 
@@ -104,7 +130,10 @@
                       "planting/tt-plant-production.lsp"
                       "core/tt-package.lsp"
                       "irrigation/tt-pipe-classes.lsp"
-                      "irrigation/tt-irrigation-tools.lsp")
+                      "irrigation/tt-irrigation-tools.lsp"
+                      "site/tt-site-labels.lsp"
+                      "lighting/tt-lighting-tools.lsp"
+                      "schedules/tt-equipment-schedules.lsp")
             ok T)
       ;; Always use explicit paths under one installation, never bare module
       ;; names that could resolve to files in another support directory.
@@ -129,6 +158,7 @@
           (princ (strcat "\nTerraTools LT " *TT:Version*
                          " ready. Type TT to open TerraTools."))
         )
+        (TT:ClearReadiness)
       )
     )
   )

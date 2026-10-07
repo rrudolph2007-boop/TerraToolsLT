@@ -5,7 +5,7 @@
 )
 
 (setq *TT:KnownObjectTypes*
-  '("DRIP_AREA" "PLANT_LABEL_LEADER" "PLANT_AREA_DENSITY" "PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"
+  '("EQUIPMENT_SCHEDULE" "REFNOTE_LABEL" "DRIP_AREA" "PLANT_LABEL_LEADER" "PLANT_AREA_DENSITY" "PLANT_INSTANCE" "PLANT_AREA_SQUARE" "PLANT_AREA_TRIANGULAR"
     "PLANT_MIX_AREA" "PLANT_LABEL" "PLANT_SCHEDULE" "WORK_AREA"
     "REFNOTE_NOTATION" "REFNOTE_COUNT" "REFNOTE_LENGTH" "REFNOTE_AREA"
     "REFNOTE_VOLUME" "REFNOTE_AMENITY" "REFNOTE_MATERIAL" "REFNOTE_HARDSCAPE"
@@ -23,6 +23,8 @@
         malformed (- total (length items))
         active-project-uuid (if (TT:ProjectCurrent)
                               (TT:ProjectValue *TT:CurrentProject* 'PROJECT_UUID)))
+  ;; Sorted UUIDs make duplicate comparison linear after O(n log n) ordering.
+  (setq items (vl-sort items '(lambda (a b / au bu) (setq au (cdr (assoc 'ENTITY_UUID (cdr a))) bu (cdr (assoc 'ENTITY_UUID (cdr b)))) (if (equal au bu) (< (vl-princ-to-string (car a)) (vl-princ-to-string (car b))) (< au bu)))))
   (foreach item items
     (setq entity (car item) metadata (cdr item)
           uuid (cdr (assoc 'ENTITY_UUID metadata))
@@ -31,14 +33,14 @@
     (setq object-type (cdr (assoc 'OBJECT_TYPE metadata)))
     (cond
       ((or (null uuid) (equal uuid "")) (setq malformed (1+ malformed)))
-      ((member uuid seen)
+      ((equal uuid seen)
         (setq duplicates (1+ (if duplicates duplicates 0)))
         (if repair
           (progn
             (setq metadata (TT:SmartMetadataPut metadata 'ENTITY_UUID (TT:GenerateUUID)))
             (if (TT:SetEntityXData entity metadata)
               (setq repaired (1+ (if repaired repaired 0)))))))
-      (T (setq seen (cons uuid seen))))
+      (T (setq seen uuid)))
     (if (or (null project-uuid) (equal project-uuid ""))
       (setq missing-project (1+ (if missing-project missing-project 0))))
     (if (and active-project-uuid project-uuid

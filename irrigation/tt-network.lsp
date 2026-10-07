@@ -95,7 +95,8 @@
             (cond
               ((equal (cdr (assoc 'OBJECT_TYPE data)) "POC")
                 (setq sources (cons (TT:IrrigationEntityPoint (car item)) sources)))
-              ((and (assoc 'FLOW_GPM data) (>= (cdr (assoc 'FLOW_GPM data)) 0.0))
+              ((and (assoc 'FLOW_GPM data) (>= (cdr (assoc 'FLOW_GPM data)) 0.0)
+                    (not (member (cdr (assoc 'OBJECT_TYPE data)) '("CONTROLLER" "SLEEVE"))))
                 (setq record (TT:IrrigationFind palette (cdr (assoc 'CATALOG_ID data))))
                 (if (or (and record (numberp (TT:DataValue record 'PRESSURE_PSI))) (numberp (cdr (assoc 'PRESSURE_PSI data))))
                   (setq demands (cons (list (TT:IrrigationEntityPoint (car item))
@@ -107,7 +108,7 @@
         (TT:NetworkBuild edges demands sources tolerance)))
     (list 'IRRIGATION_GRAPH (cons 'ERRORS '("Active project and resolved drawing units are required")))))
 
-(defun TT:NetworkPressure (graph source-pressure unit / nodes edges flows pending losses paths reports progress remaining edge from to node loss result rise required maximum critical pair)
+(defun TT:NetworkPressure (graph source-pressure unit / nodes edges flows pending losses paths reports progress remaining edge from to node loss result rise required maximum critical pair root)
   (if (null (TT:DataValue graph 'ERRORS))
     (progn
       (setq nodes (TT:DataValue graph 'NODES) edges (TT:DataValue graph 'EDGES)
@@ -115,7 +116,9 @@
             losses (list (cons (TT:DataValue graph 'ROOT)
                           (TT:DataValue (TT:NetworkNode (TT:DataValue graph 'NODES)
                             (TT:DataValue graph 'ROOT)) 'LOSS)))
-            paths (list (cons (TT:DataValue graph 'ROOT) nil)) maximum 0.0)
+            paths (list (cons (TT:DataValue graph 'ROOT) nil))
+            root (TT:NetworkNode nodes (TT:DataValue graph 'ROOT))
+            maximum (+ (TT:DataValue root 'REQUIRED) (TT:DataValue root 'LOSS)))
       (while (and pending progress)
         (setq remaining nil progress nil)
         (foreach edge pending
@@ -148,7 +151,9 @@
 
 (defun C:TTAUTOCRITICALPATH (/ *error* station graph available report edge item)
   (defun *error* (message) (TT:ReportError "TTAUTOCRITICALPATH" message))
-  (setq station (getstring T "\nStation to analyze: ") graph (TT:NetworkFromDrawing station))
+  (setq station (getstring T "\nStation to analyze <unassigned>: "))
+  (if (= station "") (setq station nil))
+  (setq graph (TT:NetworkFromDrawing station))
   (if (TT:DataValue graph 'ERRORS)
     (foreach item (TT:DataValue graph 'ERRORS) (princ (strcat "\nNetwork unresolved: " item)))
     (progn
@@ -160,6 +165,7 @@
             (progn
               (TT:PrintValue "Required source pressure, psi" (TT:DataValue report 'SOURCE_REQUIRED_PSI))
               (TT:PrintValue "Source pressure margin, psi" (TT:DataValue report 'SOURCE_MARGIN_PSI))
+              (TT:NetworkPrintPressure report)
               (foreach edge (TT:DataValue graph 'EDGES)
                 (if (member (TT:DataValue edge 'EDGE_ID) (TT:DataValue report 'CRITICAL_EDGE_IDS))
                   (redraw (TT:DataValue edge 'ENTITY) 3)))
@@ -184,4 +190,33 @@
   (if value (TT:ProjectSaveSection 'IRRIGATION_TOLERANCE value))
   (princ))
 
+T
+
+(defun TT:NetworkPrintPressure (report / row edge hydraulics)
+  (foreach row (TT:DataValue report 'REPORTS)
+    (setq edge (TT:DataValue row 'EDGE) hydraulics (TT:DataValue row 'HYDRAULICS))
+    (princ (strcat "\nPipe " (itoa (1+ (TT:DataValue edge 'EDGE_ID)))
+      " | flow " (rtos (TT:DataValue hydraulics 'FLOW_GPM) 2 3) " gpm"
+      " | ID " (rtos (TT:DataValue hydraulics 'DIAMETER_IN) 2 3) " in"
+      " | velocity " (rtos (TT:DataValue hydraulics 'VELOCITY_FPS) 2 3) " ft/s"
+      " | node available " (rtos (TT:DataValue row 'AVAILABLE_PSI) 2 3) " psi"
+      " | margin " (rtos (TT:DataValue row 'MARGIN_PSI) 2 3) " psi"))))
+
+(defun C:TTIRRIGATIONANALYZE (/ station graph report problem)
+  (setq station (getstring T "\nStation <unassigned>: "))
+  (if (= station "") (setq station nil))
+  (setq graph (TT:NetworkFromDrawing station))
+  (if (TT:DataValue graph 'ERRORS)
+    (foreach problem (TT:DataValue graph 'ERRORS) (princ (strcat "\nNetwork unresolved: " problem)))
+    (progn
+      (TT:PrintValue "Station demand, gpm" (cdr (assoc (TT:DataValue graph 'ROOT) (TT:DataValue graph 'FLOWS))))
+      (setq report (TT:NetworkPressure graph 0.0 (TT:DrawingUnitName)))
+      (if report
+        (progn (TT:PrintValue "Required source pressure, psi" (TT:DataValue report 'SOURCE_REQUIRED_PSI))
+          (princ "\nNode pressures below are relative to zero source pressure. Use TTAUTOCRITICALPATH to enter available pressure.")
+          (TT:NetworkPrintPressure report))
+        (princ "\nPressure calculation refused: check pipe inside diameter, C factor and drawing units."))))
+  (princ))
+(defun C:TTZONEINFO () (C:TTIRRIGATIONANALYZE))
+(defun C:TTCRITICALPATH () (C:TTAUTOCRITICALPATH))
 T

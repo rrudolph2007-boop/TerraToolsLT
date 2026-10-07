@@ -1,0 +1,32 @@
+(defun C:TTMATCHFIXTURE (/ *error* undo-open project source record selection index entity data geometry count block)
+  (defun *error* (message)
+    (if undo-open (command-s "_.UNDO" "_End")) (TT:ReportError "TTMATCHFIXTURE" message))
+  (setq project (TT:ProjectCurrent) source (if project (TT:SelectSmartEntity "\nSelect source fixture: ")) count 0)
+  (if (and source (equal (cdr (assoc 'OBJECT_TYPE (cdr source))) "FIXTURE")
+      (equal (cdr (assoc 'PROJECT_UUID (cdr source))) (TT:ProjectValue project 'PROJECT_UUID))
+      (setq record (TT:LightingFind (TT:LightingPalette project) (cdr (assoc 'CATALOG_ID (cdr source)))))
+      (setq block (TT:EnsureSymbolBlock (TT:DataValue record 'SYMBOL) 'SQUARE))
+      (setq selection (ssget "_:L")))
+    (progn
+      (command-s "_.UNDO" "_Begin") (setq undo-open T index 0)
+      (while (< index (sslength selection))
+        (setq entity (ssname selection index) index (1+ index) data (TT:GetEntityXData entity) geometry (entget entity))
+        (if (and (equal (cdr (assoc 0 geometry)) "INSERT") (equal (cdr (assoc 'OBJECT_TYPE data)) "FIXTURE")
+          (equal (cdr (assoc 'PROJECT_UUID data)) (TT:ProjectValue project 'PROJECT_UUID)))
+          (if (entmod (subst (cons 2 block) (assoc 2 geometry) geometry))
+            (if (TT:SetEntityXData entity (TT:SmartMetadataPut data 'CATALOG_ID (TT:DataValue record 'FIXTURE_ID)))
+              (setq count (1+ count))
+              (entmod geometry)))))
+      (command-s "_.UNDO" "_End") (setq undo-open nil)))
+  (TT:PrintValue "Fixtures matched" count) (princ))
+
+(defun C:TTCOUNTLIGHTING (/ project records record items item count)
+  (setq project (TT:ProjectCurrent) records (TT:LightingPalette project)
+    items (TT:SmartFilter (TT:ProjectItems (TT:SmartScan) project) "LIGHTING" "FIXTURE"))
+  (foreach record records
+    (setq count 0)
+    (foreach item items
+      (if (equal (TT:DataValue record 'FIXTURE_ID) (cdr (assoc 'CATALOG_ID (cdr item)))) (setq count (1+ count))))
+    (TT:PrintValue (TT:DataValue record 'CODE) count))
+  (princ))
+T

@@ -80,7 +80,7 @@
 (defun TT:XDataMetadataValidP (metadata / item keys numeric-keys valid)
   (setq valid (TT:XDataStringValueP (cdr (assoc 'ENTITY_UUID metadata)))
         keys '(PROJECT_UUID MODULE OBJECT_TYPE CATALOG_ID WORK_AREA_ID CIRCUIT STATION PIPE_CLASS)
-        numeric-keys '(CAPACITY_WATTS FLOW_GPM DIAMETER_IN COVERAGE_RADIUS INSIDE_DIAMETER C_FACTOR MANUAL_SIZE))
+        numeric-keys '(CAPACITY_WATTS FLOW_GPM DIAMETER_IN COVERAGE_RADIUS COVERAGE_SWEEP PRESSURE_PSI INSIDE_DIAMETER C_FACTOR MANUAL_SIZE))
   (while (and valid keys)
     (setq item (assoc (car keys) metadata))
     (if (and item (not (TT:XDataStringValueP (cdr item))))
@@ -115,7 +115,7 @@
                 (cons 1070 *TT:XDataSchemaVersion*))
         keys '(ENTITY_UUID PROJECT_UUID MODULE OBJECT_TYPE
                CATALOG_ID WORK_AREA_ID CIRCUIT CAPACITY_WATTS STATION
-               FLOW_GPM DIAMETER_IN COVERAGE_RADIUS INSIDE_DIAMETER PIPE_CLASS C_FACTOR MANUAL_SIZE))
+               FLOW_GPM DIAMETER_IN COVERAGE_RADIUS COVERAGE_SWEEP PRESSURE_PSI INSIDE_DIAMETER PIPE_CLASS C_FACTOR MANUAL_SIZE))
   (while keys
     (setq app-data (TT:XDataAppendField app-data (car keys) metadata)
           keys (cdr keys))

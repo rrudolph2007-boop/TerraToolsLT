@@ -148,7 +148,9 @@
   (if record
     (progn
       (setq number (getstring T "\nNew detail number: "))
-      (if (not (equal number ""))
+      (if (and (not (equal number ""))
+        (or (equal number (TT:DataValue record 'NUMBER))
+            (not (TT:DetailNumberExistsP (TT:Details project) number))))
         (progn
           (setq updated (TT:DataPut record 'NUMBER number)
                 records (subst updated record (TT:Details project)))

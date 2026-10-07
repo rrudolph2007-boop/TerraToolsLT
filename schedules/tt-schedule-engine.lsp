@@ -41,7 +41,7 @@
   (setq project (TT:ProjectCurrent) palette (if project (TT:PlantPaletteLoadFromProject project))
         plant (if palette (TT:DataFindByValue (TT:PlantPaletteGetAllFromPalette palette)
                                                'PROJECT_PLANT_ID project-id))
-        items (TT:SmartFilter (TT:SmartScan) "PLANTING" nil))
+        items (TT:SmartFilter (TT:ProjectItems (TT:SmartScan) project) "PLANTING" nil))
   (if plant (TT:PlantDerivedQuantityFromItems project-id plant work-area-id items project) 0))
 
 (defun TT:PlantScheduleRows (work-area-id / project palette rows record quantity items)
@@ -86,7 +86,7 @@
       (if (equal scope "WorkArea")
         (progn (setq work-area (TT:SelectWorkAreaRecord project))
                (if work-area (setq work-area-id (TT:DataValue work-area 'WORK_AREA_ID)))))))
-  (setq rows (if project (TT:PlantScheduleRows work-area-id)))
+  (setq rows (if (and project (or (not (equal scope "WorkArea")) work-area)) (TT:PlantScheduleRows work-area-id)))
   (if (and project rows (setq point (getpoint "\nPlant schedule insertion point: ")))
     (progn
       (setq height (TT:GetPreference 'ANNOTATION_TEXT_HEIGHT))
@@ -99,14 +99,15 @@
   (princ)
 )
 
-(defun C:TTUPDATEPLANTSCHEDULE (/ *error* item data rows)
+(defun C:TTUPDATEPLANTSCHEDULE (/ *error* item data rows project)
   (defun *error* (message) (TT:ReportError "TTUPDATEPLANTSCHEDULE" message))
-  (setq item (TT:SelectSmartEntity "\nSelect TerraTools plant schedule: "))
-  (if (and item (equal (cdr (assoc 'OBJECT_TYPE (cdr item))) "PLANT_SCHEDULE"))
+  (setq project (TT:ProjectCurrent) item (if project (TT:SelectSmartEntity "\nSelect TerraTools plant schedule: ")))
+  (if (and item (equal (cdr (assoc 'PROJECT_UUID (cdr item))) (TT:ProjectValue project 'PROJECT_UUID))
+           (equal (cdr (assoc 'OBJECT_TYPE (cdr item))) "PLANT_SCHEDULE"))
     (progn
       (setq rows (TT:PlantScheduleRows (cdr (assoc 'WORK_AREA_ID (cdr item))))
             data (entget (car item)))
-      (if (and rows (assoc 1 data)
+      (if (and (assoc 1 data)
                (entmod (subst (cons 1 (TT:PlantScheduleText rows)) (assoc 1 data) data)))
         (princ "\nPlant schedule updated.")))
     (princ "\nThe selected entity is not a TerraTools plant schedule."))

@@ -75,13 +75,14 @@
       (princ (strcat "\nSelected plant instances: " (itoa count)))))
   (princ))
 
-(defun C:TTUNASSIGNWORKAREA (/ selection index entity data count)
+(defun C:TTUNASSIGNWORKAREA (/ selection index entity data count project)
+  (setq project (TT:ProjectCurrent))
   (setq selection (ssget "_:L") index 0 count 0)
   (if selection
     (progn
       (while (< index (sslength selection))
         (setq entity (ssname selection index) data (TT:GetEntityXData entity) index (1+ index))
-        (if (and data (assoc 'WORK_AREA_ID data)
+        (if (and project data (equal (cdr (assoc 'PROJECT_UUID data)) (TT:ProjectValue project 'PROJECT_UUID)) (assoc 'WORK_AREA_ID data)
                  (TT:SetEntityXData entity (vl-remove (assoc 'WORK_AREA_ID data) data)))
           (setq count (1+ count))))
       (princ (strcat "\nRemoved Work Area assignment from " (itoa count) " objects."))))

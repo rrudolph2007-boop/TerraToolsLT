@@ -1,6 +1,6 @@
 # TerraTools LT
 
-TerraTools LT is a landscape architecture production toolkit for AutoCAD LT 2024+ on Windows. Release candidate `0.10.0-rc1` uses AutoLISP, DCL, ordinary DWG entities, TERRATOOLS XData, and external S-expression project files. It does not require full AutoCAD, .NET, ObjectARX, VBA, Civil 3D, Python, Node.js, or a database service.
+TerraTools LT is a landscape architecture production toolkit for AutoCAD LT 2024+ on Windows. Release candidate `0.12.0-rc1` uses AutoLISP, DCL, ordinary DWG entities, TERRATOOLS XData, and external S-expression project files. It does not require full AutoCAD, .NET, ObjectARX, VBA, Civil 3D, Python, Node.js, or a database service.
 
 ## Install and load
 
@@ -18,7 +18,7 @@ For optional startup loading, use AutoCAD LT's APPLOAD Startup Suite after the T
 - Site: cost-aware reference notes, Work Area schedules, concept zones, bulge-aware measurements, slope/ratio, bearing, coordinates, and spot labels.
 - Details: searchable metadata fields, source-file checks, duplicate-number checks, placements, callouts, renumbering, and indexes.
 - Lighting: Master Fixture Catalog, Project Fixture Palette, fixtures, transformers, wire, circuits, capacity checks, voltage-drop helper, schedules, costs, and verification.
-- Irrigation: equipment palette, equipment and pipe graphics, coverage, stations, topology checks, per-pipe downstream flow, hydraulics, sizing, selected critical paths, schedules, and verification.
+- Irrigation: equipment palette, equipment and pipe graphics, coverage, stations, topology checks, per-pipe downstream flow, hydraulics, sizing, automatic critical paths, schedules, and verification.
 - Diagnostics: smart-object inspection, verification, UUID reconciliation, highlighting, mimic, and substitution.
 
 ## Data model
@@ -31,8 +31,20 @@ Project schema version 1 remains in use. New sections are additive, so existing 
 
 The repository is being prepared for public release, but a final software license has not been chosen. See [License Notes](LICENSE_NOTES.md) and [Contributing](CONTRIBUTING.md).
 
+## Optional production plant database
+
+The software works with its 15 fictional sample plants without installing a large dataset. The separate WFO June 2026 CC0 package contains 435,702 accepted taxa, 999,746 linked aliases and 435,702 taxonomy-only descriptions. It was built locally and reverified during closure. It is not a horticultural specification library.
+
+Extract the data package so `data/plants/production/manifest.dat` sits below the TerraTools root. Set LISPSYS to 1 or 2 and restart LT if needed. Run `TTPLANTDATABASE`, then search with `TTPLANTS` > Plant Sources. Runtime needs no Node installation. See [Plant Database](docs/PLANT_DATABASE.md) for package, build and update instructions.
+
+## Current production workflows
+
+`TTPLANTS` opens the Plant Manager with project/source/favorite/recent views. Variants share source provenance but have independent project IDs and unique codes. `TTPLANTFILL`, `TTDENSITYAREA`, `TTPLANTSYMBOLS`, `TTLABELSTYLE` and `TTSCHEDULESTYLE` provide the newer planting controls.
+
+Shared record managers: `TTWORKAREAS`, `TTREFNOTES`, `TTDETAILS`, `TTLIGHTING`, `TTIRRIGATION`, `TTSTATIONS`, `TTCONTROLLERS`. Existing command-line entry points remain available where documented. `TTRECOVERPROJECT`, `TTPACKAGE` and `TTADOPT` provide deliberate recovery and limited portability.
+
 ## Runtime status
 
-The earlier Core, UUID/XData, project, preferences, layer, scale, Master Plant Catalog, and basic Project Plant Palette work passed real AutoCAD LT tests before this release-candidate pass. The new release-candidate modules have received static review only. Run [ACCEPTANCE_TESTS.md](ACCEPTANCE_TESTS.md) in AutoCAD LT before treating them as verified.
+Earlier foundation tests passed in real AutoCAD LT. Closure was exercised in AutoCAD LT 2027 Core Console using disposable drawings/projects: loader/reload, read-only QA/smoke, project lifecycle, variants, recovery, package reopen, controller validation, XData and graph calculations. This does **not** establish GUI acceptance or compatibility with every LT version. The minimal DCL control and product dialogs both returned -1 in Core Console. Visible dialogs remain untested.
 
-Known limits are documented in the [User Guide](docs/USER_GUIDE.md) and [Parity Matrix](PARITY_MATRIX.md), especially user-assisted critical paths, Xref read-only behavior, simple original symbols, fixed schedule layouts, and runtime areas awaiting LT acceptance.
+Run the 80 scenarios in [Acceptance Tests](ACCEPTANCE_TESTS.md). [Release Checklist](RELEASE_CHECKLIST.md) records verification and remaining release gates. [Parity Matrix](PARITY_MATRIX.md) lists every deferred or partial capability. This is a prerelease, not 1.0.

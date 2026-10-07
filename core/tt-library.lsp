@@ -44,9 +44,10 @@
               (setq selected (TT:PromptNumberedRecord (TT:ProjectValue project (car config)) 'TT:LibraryLabel "Select project record to copy"))
               (if selected
                 (progn
+                  (setq selected (TT:LibraryNormalize selected library-kind))
                   (setq id (TT:DataValue selected (cadr config)) old (TT:DataFindByValue records (cadr config) id))
                   (if old (princ "\nThis record is already saved in the user library.")
-                    (if (TT:StorageWrite path (TT:DataPut data 'RECORDS (append records (list selected)))) (princ "\nUser library copy saved."))))))
+                    (if (and (TT:LibraryValidate (TT:DataPut data 'RECORDS (append records (list selected))) library-kind) (TT:StorageWrite path (TT:DataPut data 'RECORDS (append records (list selected))))) (princ "\nUser library copy saved."))))))
             ((= option "Add")
               (if (null records) (princ "\nThe user library is empty. Save a project record or import an office library first.")
                 (if (setq selected (TT:PromptNumberedRecord records 'TT:LibraryLabel "Select library record"))
@@ -69,4 +70,11 @@
                     (TT:StorageWrite path (TT:DataPut data 'RECORDS records)))
                   (princ "\nLibrary import refused: its schema or records are invalid.")))))))))
   (princ))
+T
+
+(defun TT:LibraryNormalize (record kind / field)
+  (foreach field (nth 4 (TT:ManagerConfig kind))
+    (if (null (TT:DataValue record (car field)))
+      (setq record (TT:DataPut record (car field) (if (eq (nth 2 field) 'NONNEGATIVE) 0.0 "")))))
+  record)
 T

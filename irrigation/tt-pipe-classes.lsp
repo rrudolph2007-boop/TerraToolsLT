@@ -147,3 +147,21 @@
       (command-s "_.UNDO" "_End") (setq undo-open nil)))
   (TT:PrintValue "Pipes resized (manual sizes retained)" count) (princ))
 T
+
+(defun C:TTSIZEPIPE (/ class length flow maxv maxloss size result selected)
+  (setq class (TT:PipeChooseClass))
+  (if class
+    (progn
+      (initget 6) (setq length (getreal "\nPipe length, feet: "))
+      (if length (progn (initget 4) (setq flow (getreal "\nDesign flow, gpm: "))))
+      (if flow
+        (progn
+          (initget 6) (setq maxv (getreal "\nMaximum velocity, ft/s <5>: ")) (if (null maxv) (setq maxv 5.0))
+          (initget 6) (setq maxloss (getreal "\nMaximum friction per pipe, psi <5>: ")) (if (null maxloss) (setq maxloss 5.0))
+          (foreach size (TT:PipeClassSizes class)
+            (setq result (TT:HydraulicPipeResult length flow (cadr size) (TT:DataValue class 'C_FACTOR) 0.0 0.0))
+            (if (and (null selected) result (<= (TT:DataValue result 'VELOCITY_FPS) maxv)
+              (<= (TT:DataValue result 'FRICTION_LOSS_PSI) maxloss)) (setq selected size)))
+          (princ (strcat "\n" (if selected (TT:PipeSizeLabel selected) "No available size passes.")))))))
+  (princ))
+T

@@ -54,7 +54,8 @@
 (defun TT:ManagerIdentityInUse (record config items / id item used)
   (setq id (TT:DataValue record (cadr config)))
   (foreach item items
-    (if (or (equal id (cdr (assoc 'CATALOG_ID (cdr item))))
+    (if (or (and (not (equal (cdr (assoc 'OBJECT_TYPE (cdr item))) "WORK_AREA"))
+                 (equal id (cdr (assoc 'CATALOG_ID (cdr item)))))
             (equal id (cdr (assoc 'WORK_AREA_ID (cdr item))))) (setq used T)))
   used)
 
@@ -93,12 +94,21 @@
 
 (defun TT:ManagerHighlight (kind record / config id item data count selected)
   (setq config (TT:ManagerConfig kind) id (TT:DataValue record (cadr config)) count 0 selected (ssadd))
-  (foreach item (TT:SmartScan)
+  (foreach item (TT:ProjectItems (TT:SmartScan) (TT:ProjectCurrent))
     (setq data (cdr item))
     (if (or (equal id (cdr (assoc 'CATALOG_ID data))) (equal id (cdr (assoc 'WORK_AREA_ID data)))
       (and (eq kind 'STATION) (equal (TT:DataValue record 'NAME) (cdr (assoc 'STATION data)))))
       (progn (ssadd (car item) selected) (setq count (1+ count)))))
   (sssetfirst nil selected) (TT:PrintValue "Selected objects" count))
+
+(defun TT:ManagerNamedDependencies (kind record project / item used name)
+  (setq name (TT:DataValue record 'NAME))
+  (if (eq kind 'CONTROLLER)
+    (foreach item (TT:ProjectValue project 'IRRIGATION_STATIONS)
+      (if (equal name (TT:DataValue item 'CONTROLLER)) (setq used T)))
+    (foreach item (TT:ProjectItems (TT:SmartScan) project)
+      (if (equal name (cdr (assoc 'STATION (cdr item)))) (setq used T))))
+  used)
 
 (defun TT:ManagerNew (kind / config record field)
   (setq config (TT:ManagerConfig kind) record (list (car config) (cons (cadr config) (TT:GenerateUUID))))
@@ -108,7 +118,7 @@
   (setq record (TT:UIEditRecord record (nth 4 config) (strcat "TerraTools LT | " (nth 3 config))))
   (if record (TT:ManagerSaveRecord kind record nil)))
 
-(defun TT:ManagerAction (kind action record / config project records edited answer item blocked)
+(defun TT:ManagerAction (kind action record / config project records edited answer item blocked old-data)
   (setq config (TT:ManagerConfig kind) project (TT:ProjectCurrent) records (TT:ProjectValue project (car config)))
   (cond
     ((= action 1)
@@ -120,11 +130,20 @@
       (if edited (TT:ManagerSaveRecord kind edited record)))
     ((and (= action 3) record)
       (setq blocked (TT:ManagerIdentityInUse record config (TT:SmartScan)))
-      (if (member kind '(STATION CONTROLLER)) (setq blocked T))
-      (if blocked (princ "\nRemoval refused: resolve drawing dependencies first. Station/controller records are retained for reference safety.")
+      (if (member kind '(STATION CONTROLLER)) (setq blocked (TT:ManagerNamedDependencies kind record project)))
+      (if blocked (princ "\nRemoval refused: resolve drawing or project dependencies first.")
         (progn
           (initget "Yes No") (setq answer (getkword "\nRemove record? Check other project drawings first. [Yes/No] <No>: "))
-          (if (= answer "Yes") (TT:ProjectSaveSection (car config) (vl-remove record records))))))
+          (if (= answer "Yes")
+            (progn
+              (setq item (if (eq kind 'WORK) (TT:WorkAreaEntity (TT:DataValue record 'WORK_AREA_ID)))
+                    old-data (if item (TT:GetEntityXData item)))
+              (if (or (null item) (TT:RemoveEntityXData item))
+                (if (not (TT:ProjectSaveSection (car config) (vl-remove record records)))
+                  (progn
+                    (if old-data (TT:SetEntityXData item old-data))
+                    (TT:ProjectPrintError)))
+                (princ "\nThe Work Area boundary could not be detached. Check its layer; the project record was kept.")))))))
     ((and (= action 4) record) (TT:ManagerPlace kind record))
     ((and (= action 5) record) (TT:ManagerHighlight kind record))
     ((= action 6) (TT:LibraryCommand kind))

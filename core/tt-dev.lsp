@@ -280,7 +280,7 @@
         (setq passed nil)))
     (TT:DevSmokeSkip "Work Areas" "No readable project is active."))
 
-  (foreach module-check '("dialogs/terratools-main.dcl" "dialogs/terratools-plants.dcl")
+  (foreach module-check '("dialogs/terratools-main.dcl" "dialogs/terratools-plants.dcl" "dialogs/terratools-records.dcl")
     (if (not (TT:DevSmokeCheck (findfile (TT:StorageJoinPath *TT:Root* module-check))
                               module-check "DCL file is missing.")) (setq passed nil)))
   (if (findfile (TT:StorageJoinPath (TT:PlantDatabaseRoot) "manifest.dat"))
