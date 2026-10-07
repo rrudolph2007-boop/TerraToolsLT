@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible TerraTools LT problem
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing TerraTools LT. Do not upload confidential client drawings, project files, addresses, credentials, or licensed third-party content.
+  - type: input
+    id: terratools
+    attributes:
+      label: TerraTools version
+      placeholder: 0.12.0-rc1
+    validations:
+      required: true
+  - type: input
+    id: autocad
+    attributes:
+      label: AutoCAD LT version
+      placeholder: AutoCAD LT 2026
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Give the smallest safe sequence that reproduces the problem.
+      placeholder: |
+        1. APPLOAD TerraTools.lsp
+        2. Open a project
+        3. Run ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Non-sensitive diagnostics
+      description: Paste relevant TTDEBUG / TTDEVSMOKE / TTQACHECK output with client/project-sensitive information removed.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed confidential project/client information and proprietary third-party content.
+          required: true
