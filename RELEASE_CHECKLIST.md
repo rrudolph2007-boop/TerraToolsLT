@@ -4,7 +4,7 @@ Closure date: 2026-10-06; UX evidence updated 2026-10-07 for pushed commit 42915
 
 | Gate | Current evidence / required action |
 |---|---|
-| Git status/diff | feature/terratools-full-build and its local origin tracking reference both point to 42915ad40ed8d70e13c8e653c4e16e1dee7ea898. UX polish is committed in 237212a; shared manager empty-state repair is committed in 42915ad. This documentation follow-up does not commit or push. |
+| Git status/diff | main contains the completed application/UX baseline through 71e30b3. Public-release assets and distribution automation are staged on productize/public-release for review/merge; repository visibility and the first release tag remain separate publication actions. |
 | Lisp static audit | tools/check-lisp.mjs: 60 Lisp files, 669 unique functions, zero errors after the shared manager repair. Reader, definitions, direct TT calls and explicit loader file inventory checked. |
 | Loader | All explicit modules exist; dependency order reviewed; exact-root reload and module diagnostics exercised in LT 2027 Core Console. Readiness cleared on failure. |
 | TTRELOAD | Passed in LT 2027 Core Console. Repeat in trusted GUI installation with SECURELOAD enabled. |
