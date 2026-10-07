@@ -26,7 +26,7 @@ This checklist is intentionally short and operational. The deeper engineering ga
 - [ ] Confirm GitHub Issues are enabled.
 - [ ] Enable private vulnerability reporting if available.
 - [ ] Enable GitHub Pages with **GitHub Actions** as the source.
-- [ ] Create and push the signed/annotated release tag `v0.12.0-rc1`.
+- [ ] Create and push the annotated release tag `v0.12.0-rc1` (sign it too if your Git setup is configured for signing).
 - [ ] Confirm **Build and publish TerraTools release** completes successfully.
 - [ ] Verify the GitHub prerelease contains:
   - `TerraTools-LT-0.12.0-rc1.zip`
