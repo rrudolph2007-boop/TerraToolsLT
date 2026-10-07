@@ -576,11 +576,11 @@ These 15 scenarios supplement the 80 engineering scenarios. All are **NOT RUN in
 
 **Setup:** Empty sections for Work Areas, Reference Notes, Details, Lighting, Irrigation, Stations and Controllers.
 
-**Actions:** Open each from Home/Tools; read guidance; add one record through its existing workflow; search for an absent term; Clear.
+**Actions:** Run TTRELOAD. With a valid project whose WORK_AREAS is nil, run TTWORKAREAS. Search for an absent term and Clear while empty; use Change Work Area and press Enter to leave none active; Close, reopen and Esc. Reopen, Add a Work Area using an ordinary closed boundary, then search for an absent term and Clear again. Repeat empty/populated-to-empty searches in TTREFNOTES, TTDETAILS, TTLIGHTING, TTIRRIGATION, TTSTATIONS and TTCONTROLLERS.
 
-**Expected:** Each empty section gives a domain-specific next step. Filtered-empty status explains Clear. Inapplicable actions are disabled.
+**Expected:** Managers remain open without command-line errors. Empty Work Areas shows "No Work Areas yet. Add a closed boundary to organize objects and schedules." Add, Search, Clear, Change Work Area and Close remain usable. Edit, Remove, Place/Assign, Highlight and Details stay disabled without a selected record. Each other empty section gives its own next step. Filtered-empty status explains Clear.
 
-**Pass criteria:** Clear restores records without changing them; each manager distinguishes no data from no matches.
+**Pass criteria:** No consp nil or selection error on initialization, zero search results, record-independent actions or cancellation. Clear restores real records and applicable actions without changing data. No default Work Area is fabricated. This GUI regression is NOT RUN until observed in visible LT; Core Console selection tests do not establish DCL acceptance.
 
 ### UX8. Active Work Area is understandable
 

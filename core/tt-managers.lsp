@@ -27,8 +27,19 @@
   (strcat (TT:UIValue (TT:DataValue record (nth 2 config)))
     (if title (strcat " | " (TT:UIValue title)) "")))
 
+;;; DCL single-selection values are canonical zero-based integer strings.
+;;; Reject blank, malformed, stale and overflowing values before calling NTH.
+(defun TT:ManagerSelection (records selection / index)
+  (if (and records (listp records) (eq (type selection) 'STR)
+           (> (strlen selection) 0) (<= (strlen selection) 10)
+           (not (wcmatch selection "*[~0-9]*"))
+           (setq index (atoi selection)) (>= index 0)
+           (= selection (itoa index)) (< index (length records)))
+    (nth index records)))
+
 (defun TT:ManagerSelected ()
-  (nth (atoi (get_tile "records")) manager-visible))
+  (if manager-visible
+    (TT:ManagerSelection manager-visible (get_tile "records"))))
 
 (defun TT:ManagerEmptyText (kind)
   (cond ((eq kind 'WORK) "No Work Areas yet. Add a closed boundary to organize objects and schedules.")
@@ -48,8 +59,12 @@
     ((eq kind 'CONTROLLER) "Set capacity here. Use Tools > Stations to assign controller outputs.")
     (T "Project-owned notes describe geometry. Tools provides callouts and schedules.")))
 
-(defun TT:ManagerDetail (/ record path)
-  (setq record (TT:ManagerSelected) path (TT:ProjectResourcePath (TT:DataValue record 'SOURCE_FILE)))
+(defun TT:ManagerDetail (/ record path key)
+  (setq record (TT:ManagerSelected)
+    path (if record (TT:ProjectResourcePath (TT:DataValue record 'SOURCE_FILE))))
+  (foreach key '("edit" "remove" "place" "highlight" "details")
+    (mode_tile key (if (and manager-project record) 0 1)))
+  (if (eq kind 'CONTROLLER) (progn (mode_tile "place" 1) (mode_tile "highlight" 1)))
   (set_tile "detail" (if record (TT:ManagerLabel record manager-config) "Select a record to enable its actions."))
   (set_tile "recordhint"
     (cond ((null record) "Add creates a project record. Search only filters this project's list.")
@@ -73,9 +88,8 @@
     (add_list (TT:ManagerLabel record manager-config))
     (if (equal selected-id (TT:DataValue record (cadr manager-config))) (setq selected-index index))
     (setq index (1+ index)))
-  (end_list) (set_tile "records" (itoa selected-index))
-  (foreach text '("edit" "remove" "place" "highlight" "details") (mode_tile text (if (and manager-project manager-visible) 0 1)))
-  (if (eq kind 'CONTROLLER) (progn (mode_tile "place" 1) (mode_tile "highlight" 1)))
+  (end_list)
+  (if manager-visible (set_tile "records" (itoa selected-index)))
   (foreach text '("add" "library" "area") (mode_tile text (if manager-project 0 1)))
   (mode_tile "library" (if (and manager-project (member kind '(DETAIL LIGHT IRR))) 0 1))
   (set_tile "context" (TT:UXProjectContext manager-project))
