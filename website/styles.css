@@ -143,7 +143,7 @@ code { color: #c8efd0; background: #172019; border: 1px solid #28372b; padding: 
 footer { border-top: 1px solid var(--line); padding: 34px 0; color: var(--muted); }
 .footer-inner { display: grid; grid-template-columns: 1fr 1.5fr auto; gap: 25px; align-items: center; }
 .footer-inner p { margin: 0; font-size: 13px; }
-.footer-links { display: flex; gap: 18px; font-size: 13px; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; }
 
 @media (max-width: 900px) {
   .nav-links a:not(.button) { display: none; }
