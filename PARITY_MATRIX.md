@@ -524,7 +524,7 @@ Closure review for `0.12.0-rc1`, 2026-10-06. Repository status is distinct from 
 | Third-party license inventory | IMPLEMENTED | Optional WFO CC0 package has source manifest and checksums; no manufacturer or plant image data bundled. |
 | CONTRIBUTING guide | IMPLEMENTED | Runtime, data, review, and compatibility rules are documented. |
 | Architecture document | IMPLEMENTED | Runtime, data hierarchy, project, XData, search, and irrigation boundaries are recorded. |
-| Software license decision | MISSING | Must be chosen before public release. |
+| Software license decision | IMPLEMENTED | MIT License selected in root LICENSE; third-party datasets retain separate terms. |
 
 ## Installation / Updating / Migration / Testing
 

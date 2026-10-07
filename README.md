@@ -29,7 +29,7 @@ Smart objects remain ordinary INSERT, LINE, LWPOLYLINE, CIRCLE, TEXT, or MTEXT e
 
 Project schema version 1 remains in use. New sections are additive, so existing schema-version 1 project files remain valid when they are absent. See [Data Model](docs/DATA_MODEL.md), [Architecture](ARCHITECTURE.md), and [Data Sources](DATA_SOURCES.md).
 
-The repository is being prepared for public release, but a final software license has not been chosen. See [License Notes](LICENSE_NOTES.md) and [Contributing](CONTRIBUTING.md).
+The software is MIT licensed. Third-party datasets keep their own licenses; the optional WFO package is CC0-1.0. See [License Notes](LICENSE_NOTES.md), [Privacy](PRIVACY.md), [Support](SUPPORT.md), [Security](SECURITY.md), and [Contributing](CONTRIBUTING.md).
 
 ## Optional production plant database
 
@@ -50,3 +50,12 @@ Earlier foundation tests passed in real AutoCAD LT. Closure was exercised in Aut
 Run the 80 engineering and 15 UX scenarios in [Acceptance Tests](ACCEPTANCE_TESTS.md). [Release Checklist](RELEASE_CHECKLIST.md) records verification and remaining release gates. [Parity Matrix](PARITY_MATRIX.md) lists every deferred or partial capability. This is a prerelease, not 1.0.
 
 The UX polish adds a persistent installed-database banner, explicit SAMPLE labels, project/library view controls, grouped native dialogs and workflow Tools menus. See [UX review and visual acceptance](docs/UX_REVIEW.md). Visible GUI testing is still required.
+
+
+## Public beta downloads
+
+Tagged release candidates publish a clean runtime ZIP, a separate optional WFO plant database ZIP, and `SHA256SUMS.txt` through GitHub Releases. See [INSTALL.md](INSTALL.md) for end-user installation.
+
+The static product website lives in `website/` and can be deployed through the manual GitHub Pages workflow after Pages is enabled for the public repository.
+
+TerraTools LT is independent software. It does not claim full Land F/X feature parity and is not affiliated with or endorsed by Land F/X.

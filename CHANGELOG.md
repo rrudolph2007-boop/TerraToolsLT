@@ -31,3 +31,13 @@ The Plant Manager separates Project Plants and Search Plant Library. A persisten
 Shared managers now have matching search/list/selection/action/status layouts, domain-specific empty states, active Work Area access, named removal prompts and feedback based on actual saved records or successful object changes. Tools task choosers expose existing planting, irrigation, schedule, recovery and package workflows with explanations before execution. Technical record fields remain behind Details. No storage, identity, database or hydraulic model was redesigned.
 
 GUI appearance, themes, scaling and keyboard behavior are not marked tested. See docs/UX_REVIEW.md and UX scenarios in ACCEPTANCE_TESTS.md.
+
+
+## Productization, 2026-10-07
+
+- Selected the MIT License for TerraTools LT software while preserving separate third-party dataset licensing.
+- Added public installation, support, privacy and security documentation plus structured GitHub bug reporting.
+- Added a static product website and manual GitHub Pages deployment workflow.
+- Added a tagged-release workflow that runs static QA, builds a clean runtime ZIP, downloads and cryptographically verifies the recorded WFO source, rebuilds/verifies the optional WFO database package, emits SHA-256 checksums and publishes GitHub prerelease assets.
+- Added external release notes that position TerraTools as an AutoCAD LT-first release candidate without claiming full Land F/X feature parity.
+- No repository-visibility change, public tag, GitHub Release or Pages deployment is claimed by these source changes alone.
