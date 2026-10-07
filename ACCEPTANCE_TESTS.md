@@ -507,3 +507,157 @@ Run these tests in AutoCAD LT 2024 or newer on Windows. Use disposable DWGs and 
 **Expected:** Actual times reported; only benchmark-created entities removed on finish or error.
 
 **Pass criteria:** No fixture remains and no project is modified; retain machine/LT/version context with results.
+
+## UX acceptance, 2026-10-07
+
+These 15 scenarios supplement the 80 engineering scenarios. All are **NOT RUN in visible AutoCAD LT**. Use disposable drawings/projects and record LT version, theme, display scaling and evidence. Also complete the per-dialog visual matrix in docs/UX_REVIEW.md.
+
+### UX1. Installed database is visible immediately
+
+**Setup:** Install the documented WFO package; open a project with zero or a few sample Project Plants.
+
+**Actions:** TT > Plants without running TTPLANTDATABASE first.
+
+**Expected:** Available plant data shows 435,702 plants and WFO-2026-06 from the local manifest, separately from the fictional sample notice. Project Plants is visibly a project list.
+
+**Pass criteria:** A user can identify the full library and Search Plant Library control without command knowledge. The banner remains visible in every view.
+
+### UX2. Find and add a library plant
+
+**Setup:** Same package and a writable test project.
+
+**Actions:** Plants > Search Plant Library; enter Acer rubrum; keep All categories; Search; select a record; Add to Project; enter an unused code; Save; switch to Project Plants and clear the query if needed.
+
+**Expected:** Source information is shown before adding; confirmation names the plant and code; the project copy appears. No UUID or source ID entry is required.
+
+**Pass criteria:** The saved copy has a stable project identity, original source identity and the entered code. Placement resolves it normally.
+
+### UX3. Fictional samples cannot be mistaken for the full database
+
+**Setup:** WFO installed; empty search in Search Plant Library.
+
+**Actions:** Inspect the sample list, add one sample, then inspect Project Plants. Search Acer with Tree selected, then switch to All categories.
+
+**Expected:** Sample rows, including the copied sample, carry SAMPLE. The no-search notice explains the two-letter search requirement. The category notice explains WFO's lack of design categories.
+
+**Pass criteria:** No small sample/filtered list is labeled as the complete installed database. All categories restores WFO results.
+
+### UX4. Missing optional database
+
+**Setup:** Use a separate installation copy without the optional production package; retain built-in sample data.
+
+**Actions:** TT > Plants; inspect the banner; Tools > Plant libraries and database > Installed database information.
+
+**Expected:** Banner says the open database is unavailable and samples remain available. Diagnostics give the installation-document path.
+
+**Pass criteria:** No fabricated count or silent claim that samples are the full library. Existing project copies remain usable.
+
+### UX5. Empty Project Plants and no-project browsing
+
+**Setup:** A new empty project, then a drawing with no project.
+
+**Actions:** Open Plants in both states; use Search Plant Library; select a sample.
+
+**Expected:** Empty Project Plants explains how to add. No-project context explains Create/Open; browsing and Details work; Add/Favorite/Place/Edit are disabled.
+
+**Pass criteria:** Neither state is a dead-end blank list, and browsing creates no project or drawing entities.
+
+### UX6. State after add, edit, favorite and variant
+
+**Setup:** A project, enough library results for two pages, and two project plants.
+
+**Actions:** Search and move to page 2; select and Favorite/Add. Inspect the reopened view. In Project Plants, filter a plant, Edit it and make a New Variant with a distinct code.
+
+**Expected:** Search, category, mode and valid page survive each action; selected identity is retained where still present. Duplicate code errors keep the editor open with fields intact.
+
+**Pass criteria:** No unrelated view reset, no duplicate code/identity, and no cross-project state persistence.
+
+### UX7. Empty shared managers and filtered lists
+
+**Setup:** Empty sections for Work Areas, Reference Notes, Details, Lighting, Irrigation, Stations and Controllers.
+
+**Actions:** Open each from Home/Tools; read guidance; add one record through its existing workflow; search for an absent term; Clear.
+
+**Expected:** Each empty section gives a domain-specific next step. Filtered-empty status explains Clear. Inapplicable actions are disabled.
+
+**Pass criteria:** Clear restores records without changing them; each manager distinguishes no data from no matches.
+
+### UX8. Active Work Area is understandable
+
+**Setup:** Two named Work Areas and existing placed plants/fixtures.
+
+**Actions:** Use Change Work Area in a manager; choose the first; place an object. Choose the second and place another. Change again and press Enter to clear.
+
+**Expected:** Home and managers display New placements with the selected name or no active area. Existing objects do not change area implicitly.
+
+**Pass criteria:** New objects inherit the selected area, explicit Assign changes selected objects, and schedules honor their stored assignments.
+
+### UX9. Irrigation tasks follow a usable order
+
+**Setup:** Disposable project and drawing.
+
+**Actions:** Home > Irrigation > Tools; inspect Equipment, Stations, Controllers, Pipe classes, Draw pipes, Verify, Analyze, Size and Pressure; open Stations/Controllers and edit assignments.
+
+**Expected:** Each task explains its purpose before Continue. Station/controller selected panels show assignment/capacity. Controller Place/Highlight are disabled.
+
+**Pass criteria:** Existing topology, manual-size and capacity guards remain effective; no unsafe engineering decision is automated by the UI.
+
+### UX10. Consistent manager actions
+
+**Setup:** One record in each shared manager and a Project Plant.
+
+**Actions:** Use Search, Details, Edit, Place/Assign, Highlight, Library where enabled, Tools and Close.
+
+**Expected:** Titles, list placement, selection panels, action wording and bottom status follow the documented pattern. Assignment uses Assign where it changes existing objects.
+
+**Pass criteria:** No no-op button masquerades as an available workflow; long record names and status text are reviewed using the visual matrix.
+
+### UX11. Errors give a next action
+
+**Setup:** Two plant codes, a controller with an occupied output, and a drawing whose external project file has been moved temporarily.
+
+**Actions:** Attempt a duplicate plant code, conflicting station output and project information/recovery from Home.
+
+**Expected:** Each error identifies the problem and correction. Duplicate plant editing retains entered fields. Missing-project status directs recovery; it does not manufacture replacement data.
+
+**Pass criteria:** Failed/canceled operations preserve the original files, records and drawing links.
+
+### UX12. Feedback matches actual changes
+
+**Setup:** Writable project and disposable geometry, including an ineligible object for assignment.
+
+**Actions:** Add/edit a plant; toggle Favorite; place three objects; assign eligible/ineligible objects; Highlight; cancel a Remove confirmation. Repeat a save with a deliberately inaccessible test project file.
+
+**Expected:** Plant/code names, successful placement/assignment counts, skipped counts and matching selection counts are accurate. A failed save never reports a successful update.
+
+**Pass criteria:** Inspect actual records/entities to verify feedback. Undo reverses the logical placement operation. Cancel does not claim a saved change.
+
+### UX13. Home and first-run orientation
+
+**Setup:** First use in a drawing without a project, followed by a valid project and a missing-file project.
+
+**Actions:** TT; inspect context and groups; Create/Open from Project; use Plants, Work Areas, Site, Details, Lighting, Irrigation, Output, Verify, Recovery and Help.
+
+**Expected:** First-run text directs Create/Open; production actions require a readable project. Library browsing and Recovery remain reachable. Home returns after completed tasks.
+
+**Pass criteria:** Every listed major workflow is discoverable without reading code, and displayed project/units/area match the current drawing.
+
+### UX14. Advanced commands are discoverable
+
+**Setup:** A project with data for the existing tasks.
+
+**Actions:** Find plant fill, select similar, count selected, database status, active Work Area, sizing, critical path, coverage/refresh, package and recovery through Home or Tools. Open TTHELP topics.
+
+**Expected:** Human-readable task names and explanations lead to the documented existing commands. Read-only checks are distinguishable from repairs and writes.
+
+**Pass criteria:** Every task target exists and starts the intended workflow. Canceling the chooser starts nothing.
+
+### UX15. Keyboard, cancellation and visual review
+
+**Setup:** Backed-up test project; every dialog state in docs/UX_REVIEW.md; light/dark themes and common scaling values.
+
+**Actions:** Navigate with Tab, type searches, use Enter and Esc; cancel editors/choosers/removal/placement. Repeat with long names, empty results and disabled controls. Compare files/entities before and after canceled edits.
+
+**Expected:** Search is a safe manager default; Save applies only valid editor data; Esc/Cancel exits safely. Text/buttons are visible and aligned at the tested display settings.
+
+**Pass criteria:** No canceled edit changes storage; no open Undo group remains after placement cancellation; all visual-matrix observations are recorded. Do not pass an unobserved theme/scaling/version.

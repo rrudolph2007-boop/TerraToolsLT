@@ -121,6 +121,7 @@
                       "core/tt-qa-network.lsp"
                       "core/tt-help.lsp"
                       "planting/tt-plant-ui.lsp"
+                      "core/tt-ux.lsp"
                       "core/tt-ui.lsp"
                       "core/tt-record-ui.lsp"
                       "core/tt-manager-actions.lsp"

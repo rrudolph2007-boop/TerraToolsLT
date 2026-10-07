@@ -220,16 +220,18 @@
       (while (> (length recent) 20) (setq recent (reverse (cdr (reverse recent)))))
       (TT:ProjectSaveSection 'PLANT_RECENT recent))))
 
-(defun TT:PlantToggleFavorite (record / project id favorites)
+(defun TT:PlantToggleFavorite (record / project id favorites removing saved)
   (setq project (TT:ProjectCurrent) id (TT:PlantRecordValue record 'PLANT_ID)
         favorites (if project (TT:ProjectValue project 'PLANT_FAVORITES)))
   (if (not (eq (type favorites) 'LIST)) (setq favorites nil))
   (if project
     (progn
-      (if (member id favorites)
-        (progn (setq favorites (vl-remove id favorites)) (princ "\nPlant removed from favorites."))
-        (progn (setq favorites (cons id favorites)) (princ "\nPlant added to favorites.")))
-      (TT:ProjectSaveSection 'PLANT_FAVORITES favorites))))
+      (setq removing (member id favorites)
+        favorites (if removing (vl-remove id favorites) (cons id favorites))
+        saved (TT:ProjectSaveSection 'PLANT_FAVORITES favorites))
+      (if saved (princ (if removing "\nPlant removed from Favorites." "\nPlant added to Favorites."))
+        (princ "\nFavorites could not be saved. Check project write access and try again."))
+      saved)))
 
 (defun TT:PlantSearchChooseFromPage (page-records)
   (if page-records

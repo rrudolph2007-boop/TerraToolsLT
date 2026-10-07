@@ -498,9 +498,9 @@ Closure review for `0.12.0-rc1`, 2026-10-06. Repository status is distinct from 
 
 | Capability | Status | Notes |
 |---|---|---|
-| Main DCL launcher | IMPLEMENTED | Command-line fallback. |
+| Main DCL launcher | IMPLEMENTED | Grouped Home with project/units/Work Area/database context, workflow task choosers and command-line fallback; GUI review pending. |
 | Consistent numbered choices | IMPLEMENTED | Shared prompt helper. |
-| Searchable plant manager DCL | IMPLEMENTED | Project/Sources/Favorites/Recent browser, 30-row paging, search, edit, variants, details and action refresh. GUI acceptance pending. |
+| Searchable plant manager DCL | IMPLEMENTED | Project Plants/Search Plant Library/Favorites/Recent; actual database banner, SAMPLE labels, session state, mode guards and Tools tasks. GUI acceptance pending. |
 | Module manager dialogs | IMPLEMENTED | Shared record manager covers Work Areas, Reference Notes, Details, Lighting, Irrigation, Stations and Controllers. GUI acceptance pending. |
 | Quiet cancellation | PARTIAL | Many commands are quiet; behavior varies. |
 | Internal IDs hidden | IMPLEMENTED | Ordinary workflows use numbers/entities. |
@@ -511,7 +511,7 @@ Closure review for `0.12.0-rc1`, 2026-10-06. Repository status is distinct from 
 |---|---|---|
 | README, architecture, data, hydraulics guides | IMPLEMENTED | User, developer, architecture, model, formula, provenance, and release-readiness docs exist. |
 | In-product `TTHELP` | IMPLEMENTED | Module topics list primary workflows and commands. |
-| End-to-end acceptance tests | IMPLEMENTED | 80 scenarios cover workflows, data safety, managers, graphs and GUI risks. |
+| End-to-end acceptance tests | IMPLEMENTED | 80 engineering plus 15 UX scenarios cover workflows, data safety, managers, graphs and visual/interaction risks. |
 | Formula documentation | IMPLEMENTED | Hazen-Williams and runtime assumptions. |
 | Workflow-oriented user guide | IMPLEMENTED | Current project-to-production workflows and limits are documented. |
 

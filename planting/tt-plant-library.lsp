@@ -87,7 +87,7 @@
     (progn
       (princ "\nInstalled open plant database")
       (foreach field (cdr manifest) (TT:PrintValue (vl-symbol-name (car field)) (cdr field))))
-    (princ "\nNo valid open plant database is installed. See docs/PLANT_DATABASE.md."))
+    (princ "\nOpen Plant Database is unavailable. Built-in sample plants are still available.\nInstall the optional production package to search the full database: docs/PLANT_DATABASE.md."))
   (princ))
 
 T

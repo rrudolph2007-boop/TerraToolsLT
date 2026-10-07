@@ -35,11 +35,11 @@ The repository is being prepared for public release, but a final software licens
 
 The software works with its 15 fictional sample plants without installing a large dataset. The separate WFO June 2026 CC0 package contains 435,702 accepted taxa, 999,746 linked aliases and 435,702 taxonomy-only descriptions. It was built locally and reverified during closure. It is not a horticultural specification library.
 
-Extract the data package so `data/plants/production/manifest.dat` sits below the TerraTools root. Set LISPSYS to 1 or 2 and restart LT if needed. Run `TTPLANTDATABASE`, then search with `TTPLANTS` > Plant Sources. Runtime needs no Node installation. See [Plant Database](docs/PLANT_DATABASE.md) for package, build and update instructions.
+Extract the data package so `data/plants/production/manifest.dat` sits below the TerraTools root. Set LISPSYS to 1 or 2 and restart LT if needed. Run `TTPLANTDATABASE`, then search with `TTPLANTS` > Search Plant Library. Runtime needs no Node installation. See [Plant Database](docs/PLANT_DATABASE.md) for package, build and update instructions.
 
 ## Current production workflows
 
-`TTPLANTS` opens the Plant Manager with project/source/favorite/recent views. Variants share source provenance but have independent project IDs and unique codes. `TTPLANTFILL`, `TTDENSITYAREA`, `TTPLANTSYMBOLS`, `TTLABELSTYLE` and `TTSCHEDULESTYLE` provide the newer planting controls.
+`TTPLANTS` opens the Plant Manager with Project Plants, Search Plant Library, Favorites and Recent views. Variants share source provenance but have independent project IDs and unique codes. `TTPLANTFILL`, `TTDENSITYAREA`, `TTPLANTSYMBOLS`, `TTLABELSTYLE` and `TTSCHEDULESTYLE` provide the newer planting controls.
 
 Shared record managers: `TTWORKAREAS`, `TTREFNOTES`, `TTDETAILS`, `TTLIGHTING`, `TTIRRIGATION`, `TTSTATIONS`, `TTCONTROLLERS`. Existing command-line entry points remain available where documented. `TTRECOVERPROJECT`, `TTPACKAGE` and `TTADOPT` provide deliberate recovery and limited portability.
 
@@ -47,4 +47,6 @@ Shared record managers: `TTWORKAREAS`, `TTREFNOTES`, `TTDETAILS`, `TTLIGHTING`, 
 
 Earlier foundation tests passed in real AutoCAD LT. Closure was exercised in AutoCAD LT 2027 Core Console using disposable drawings/projects: loader/reload, read-only QA/smoke, project lifecycle, variants, recovery, package reopen, controller validation, XData and graph calculations. This does **not** establish GUI acceptance or compatibility with every LT version. The minimal DCL control and product dialogs both returned -1 in Core Console. Visible dialogs remain untested.
 
-Run the 80 scenarios in [Acceptance Tests](ACCEPTANCE_TESTS.md). [Release Checklist](RELEASE_CHECKLIST.md) records verification and remaining release gates. [Parity Matrix](PARITY_MATRIX.md) lists every deferred or partial capability. This is a prerelease, not 1.0.
+Run the 80 engineering and 15 UX scenarios in [Acceptance Tests](ACCEPTANCE_TESTS.md). [Release Checklist](RELEASE_CHECKLIST.md) records verification and remaining release gates. [Parity Matrix](PARITY_MATRIX.md) lists every deferred or partial capability. This is a prerelease, not 1.0.
+
+The UX polish adds a persistent installed-database banner, explicit SAMPLE labels, project/library view controls, grouped native dialogs and workflow Tools menus. See [UX review and visual acceptance](docs/UX_REVIEW.md). Visible GUI testing is still required.

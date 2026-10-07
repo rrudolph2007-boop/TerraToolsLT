@@ -11,7 +11,8 @@
     (progn
       (start_list "details")
       (foreach pair (cdr record) (add_list (strcat (vl-symbol-name (car pair)) ": " (TT:UIValue (cdr pair)))))
-      (end_list) (action_tile "cancel" "(done_dialog 0)") (start_dialog)))
+      (end_list) (action_tile "cancel" "(done_dialog 0)") (start_dialog))
+    (princ "\nThis dialog could not be opened. Reload TerraTools and check its trusted dialogs folder."))
   (if (> dialog-id 0) (unload_dialog dialog-id)))
 
 (defun TT:UIRecordAccept (/ index field value kind message candidate)
@@ -45,7 +46,8 @@
         (setq index (1+ index)))
       (action_tile "accept" "(TT:UIRecordAccept)")
       (action_tile "cancel" "(setq edited nil)(done_dialog 0)")
-      (start_dialog)))
+      (start_dialog))
+    (princ "\nThis dialog could not be opened. Reload TerraTools and check its trusted dialogs folder."))
   (if (> dialog-id 0) (unload_dialog dialog-id))
   edited)
 T

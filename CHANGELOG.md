@@ -21,3 +21,13 @@ Visible DCL, selection/cancel/Undo behavior, multi-document isolation and LT 202
 ## Earlier prerelease checkpoints
 
 Core scaffold, UUID/XData persistence, external projects, preferences and sample plant palettes were user-tested before the completion work. The repository's Git history is the authoritative record of those checkpoints. No invented historical migration or release result is asserted here.
+
+## UX polish, 2026-10-07
+
+The Home dialog now groups Project/Plants/Work Areas, design modules and review tools. It shows project, drawing units, active placement area and installed plant-database availability, and returns after a task. Project-dependent actions are disabled without a readable project; Project, library browsing and Recovery remain available.
+
+The Plant Manager separates Project Plants and Search Plant Library. A persistent banner reads the installed database's actual count; the fictional sample library has its own notice and SAMPLE row labels. Category filters that exclude WFO explain how to restore the full search. Search, mode, category, page and selected identity stay within the current manager session. Project edits and variants use distinct codes, with duplicate feedback inside the editor.
+
+Shared managers now have matching search/list/selection/action/status layouts, domain-specific empty states, active Work Area access, named removal prompts and feedback based on actual saved records or successful object changes. Tools task choosers expose existing planting, irrigation, schedule, recovery and package workflows with explanations before execution. Technical record fields remain behind Details. No storage, identity, database or hydraulic model was redesigned.
+
+GUI appearance, themes, scaling and keyboard behavior are not marked tested. See docs/UX_REVIEW.md and UX scenarios in ACCEPTANCE_TESTS.md.
