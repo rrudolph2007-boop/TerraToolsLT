@@ -1,0 +1,109 @@
+name: Build and publish TerraTools release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Resolve and validate version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/.*\*TT:Version\* "\([^"]*\)".*/\1/p' TerraTools.lsp | head -n 1)"
+          test -n "$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match TerraTools version v$VERSION" >&2
+            exit 1
+          fi
+
+      - name: Static QA
+        run: |
+          node tools/check-lisp.mjs
+          node tools/check-dcl.mjs
+
+      - name: Build runtime ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="dist/TerraTools-LT-$VERSION"
+          mkdir -p "$STAGE/docs"
+          cp TerraTools.lsp README.md INSTALL.md LICENSE CHANGELOG.md DATA_SOURCES.md PRIVACY.md SUPPORT.md ARCHITECTURE.md "$STAGE/"
+          cp docs/USER_GUIDE.md docs/PLANT_DATABASE.md docs/HYDRAULICS.md docs/DATA_MODEL.md "$STAGE/docs/"
+          cp -R core planting site details lighting irrigation schedules dialogs data "$STAGE/"
+          if find "$STAGE" -type f \( -name '*.bak' -o -name '*.dwl' -o -name '*.dwl2' -o -name '*.secret' -o -name '.env' \) | grep -q .; then
+            echo "Unsafe development/runtime artifact entered the package." >&2
+            exit 1
+          fi
+          (cd dist && zip -qr "TerraTools-LT-$VERSION.zip" "TerraTools-LT-$VERSION")
+          rm -rf "$STAGE"
+
+      - name: Download and verify WFO source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .release-wfo/source
+          curl --fail --location --retry 3             "https://zenodo.org/api/records/20782718/files/_DwC_backbone_R.zip/content"             --output .release-wfo/wfo.zip
+          echo "ccfc7e3ca85c8b80aa96eb52d4e50e07e1811d28916b544280d8a4f1a043ba72  .release-wfo/wfo.zip" | sha256sum -c -
+          unzip -q .release-wfo/wfo.zip -d .release-wfo/source
+          CLASSIFICATION="$(find .release-wfo/source -type f -iname 'classification.csv' -print -quit)"
+          if [[ -z "$CLASSIFICATION" ]]; then
+            echo "classification.csv was not found in the verified WFO archive." >&2
+            exit 1
+          fi
+          echo "87f52724e12c5be2cf954cb48910e226ae1b2ec686da6ce65ea3453e6143aefb  $CLASSIFICATION" | sha256sum -c -
+          echo "CLASSIFICATION=$CLASSIFICATION" >> "$GITHUB_ENV"
+
+      - name: Build and verify optional WFO package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .release-wfo/package
+          node tools/build-plants.mjs "$CLASSIFICATION" .release-wfo/package/production
+          node tools/verify-plants.mjs .release-wfo/package/production
+          (cd .release-wfo/package && zip -qr "$GITHUB_WORKSPACE/dist/terratools-wfo-2026-06.zip" production)
+
+      - name: Generate checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerraTools-LT-${{ env.VERSION }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish GitHub prerelease
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="$GITHUB_REF_NAME"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG"               --title "TerraTools LT $VERSION"               --notes-file docs/RELEASE_NOTES_0.12.0-rc1.md               --prerelease
+          else
+            gh release create "$TAG" dist/*               --verify-tag               --title "TerraTools LT $VERSION"               --notes-file docs/RELEASE_NOTES_0.12.0-rc1.md               --prerelease
+          fi
