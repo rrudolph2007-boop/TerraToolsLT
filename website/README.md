@@ -8,15 +8,16 @@ Open `index.html` directly in a browser, or serve the folder with any static HTT
 
 ## Deployment
 
-The repository includes a GitHub Pages workflow at `.github/workflows/deploy-pages.yml`.
+The repository includes a manual GitHub Pages workflow at `.github/workflows/deploy-pages.yml`.
 
-Before public deployment:
+Before the first public deployment:
 
-1. select and add a root software license;
-2. make the repository public or otherwise configure Pages availability;
-3. create a GitHub Release with the tested TerraTools runtime bundle;
-4. verify all download links;
-5. enable GitHub Pages with GitHub Actions as its source;
-6. run the remaining release acceptance gates and keep the release-candidate wording until they pass.
+1. make the repository public;
+2. create the first tagged GitHub prerelease so the Download buttons resolve;
+3. enable GitHub Pages with **GitHub Actions** as its source;
+4. run the **Deploy website to GitHub Pages** workflow;
+5. verify the release/download/docs links from a signed-out browser session.
+
+The software license, release packager, checksum generation, optional WFO build, privacy/support/security docs, and website are already tracked in the productization branch.
 
 The site intentionally does **not** claim full Land F/X parity.
