@@ -17,13 +17,19 @@ Set LISPSYS to 1 or 2 and restart LT before reading Unicode plant data.
 Run `TTPLANTDATABASE`, then `TTPLANTSEARCH`, search `Acer rubrum`.
 Node.js is not required to use the installed package.
 
-No hosted download has been published by this sprint. Maintainers can distribute
-the local generated directory as a separate ZIP release asset, with its manifest
-and checksums. Raw archives and generated production data are intentionally ignored
-by Git. Do not substitute the samples for a missing production package.
+Tagged public releases are configured to publish the verified production database
+as the separate `terratools-wfo-2026-06.zip` release asset. The release workflow
+downloads the recorded public WFO archive, verifies both recorded source SHA-256
+digests, rebuilds the database, runs the full verifier, then publishes the ZIP and
+`SHA256SUMS.txt`. Raw archives and generated production data remain intentionally
+ignored by Git. Do not substitute the samples for a missing production package.
 
-The local release artifact is `artifacts/terratools-wfo-2026-06.zip`, 190,947,344
-bytes, SHA-256 `474360c38d3cc43a1fc1797eb09a9659459af5c122742738d40531781fa680b9`.
+The original closure build produced `artifacts/terratools-wfo-2026-06.zip`,
+190,947,344 bytes, SHA-256
+`474360c38d3cc43a1fc1797eb09a9659459af5c122742738d40531781fa680b9`.
+That checksum documents the closure artifact only. Public release ZIP metadata may
+produce a different archive checksum even when the verified database contents are
+equivalent; use the `SHA256SUMS.txt` published with the specific release.
 Its extracted production directory has 1,474 files totaling 1,135,555,979 bytes.
 The full verifier passed again during the 0.12.0-rc1 closure: 1,472 record/index
 files plus two manifests; accepted 435,702, aliases 999,746, descriptions 435,702.
