@@ -1,19 +1,20 @@
 # Release checklist: 0.12.0-rc1
 
-Closure date: 2026-10-06; UX follow-up verified 2026-10-07. This is a repository handoff for acceptance, not permission to publish or a GUI acceptance sign-off.
+Closure date: 2026-10-06; UX evidence updated 2026-10-07 for pushed commit 42915ad. This is a repository handoff for acceptance, not permission to publish or a full GUI acceptance sign-off.
 
 | Gate | Current evidence / required action |
 |---|---|
-| Git status/diff | UX changes reviewed on feature/terratools-full-build against user checkpoint 2441443; remain uncommitted. No commit, push, merge, rebase or reset performed. |
-| Lisp static audit | tools/check-lisp.mjs: 60 Lisp files, 668 unique functions, zero errors. Reader, definitions, direct TT calls and explicit loader file inventory checked. |
+| Git status/diff | feature/terratools-full-build and its local origin tracking reference both point to 42915ad40ed8d70e13c8e653c4e16e1dee7ea898. UX polish is committed in 237212a; shared manager empty-state repair is committed in 42915ad. This documentation follow-up does not commit or push. |
+| Lisp static audit | tools/check-lisp.mjs: 60 Lisp files, 669 unique functions, zero errors after the shared manager repair. Reader, definitions, direct TT calls and explicit loader file inventory checked. |
 | Loader | All explicit modules exist; dependency order reviewed; exact-root reload and module diagnostics exercised in LT 2027 Core Console. Readiness cleared on failure. |
 | TTRELOAD | Passed in LT 2027 Core Console. Repeat in trusted GUI installation with SECURELOAD enabled. |
 | TTDEVSMOKE | Passed in LT 2027 Core Console; retain read-only behavior in GUI project/no-project cases. |
 | TTQACHECK | Passed deterministic units, dimensions, geometry/bulges/containment, density, CSV, storage, hydraulics, sizing, graph, pressure, critical-path, migration and search checks. |
 | Foundation regression | 27 checks passed, zero failures; DCL load separately SKIP. Includes lifecycle, source independence, recovery and real WFO search/lookup. |
 | Completion regression | 23 checks passed, zero failures. Includes central duplicate-code save guard, package reopen, controller outputs, library normalization, duplicate reconciliation and coverage/pressure XData round trip. |
-| UX logic regression | 22 read-only checks passed in LT 2027 Core Console on 2026-10-07. Count/banner text, SAMPLE marker, action guards, empty guidance and task symbols checked. Foundation 27 and completion 23 checks also passed again, as did TTRELOAD, TTDEVSMOKE and TTQACHECK. |
-| DCL inventory | 3 files, 7 dialog definitions, zero static errors. Literal callback/tile/dialog references and task targets checked. Product and minimal control load_dialog both returned -1 in Core Console; visible rendering is NOT RUN. |
+| UX logic regression | Current tools/ux-regression.lsp runs 39 read-only checks with a valid WFO manifest, or 38 without it. All 39 passed in LT 2027 Core Console on 2026-10-07 after the shared manager repair, including 17 added selection/empty-state checks. Foundation 27 and completion 23 checks also passed again, as did TTRELOAD, TTDEVSMOKE and TTQACHECK. |
+| DCL inventory | 3 files, 7 dialog definitions, zero static errors. Literal callback/tile/dialog references and task targets checked. Product and minimal control load_dialog both returned -1 in Core Console. The two limited visible GUI confirmations below do not pass the full dialog review. |
+| Visible GUI evidence | User confirmed successful manual exercise of WFO Plant Manager/database discoverability. User also reproduced the Work Areas zero-record manager error and confirmed it fixed in visible AutoCAD LT. LT version, theme and scaling were not specified; no broader GUI acceptance is inferred. |
 | Production database | Full verifier passed on current local WFO package; exact counts/checksums/install procedure in docs/PLANT_DATABASE.md. Generated data/raw cache remain ignored. |
 | Source/license | WFO CC0 source manifest and checksums recorded; fictional samples distinguished. No software license selected: choose before public release. |
 | Migration | Current schema identity/refusal tested; no fabricated legacy conversions. |
@@ -22,7 +23,7 @@ Closure date: 2026-10-06; UX follow-up verified 2026-10-07. This is a repository
 | Multi-drawing | Project-sensitive state reviewed and project UUID guards added. Concurrent GUI A/B/A switching remains NOT RUN. |
 | Network QA | Branch/TO-demand/three-terminal flow, loops/merges/disconnection/multiple sources, pressure and elevation tests passed. Real equipment placement/selection remains a GUI gate. |
 | Benchmark | Actual LT 2027 Core Console scan/reconciliation times recorded in docs/CLOSURE_REPORT.md. Repeat in representative office drawings; no general speed guarantee. |
-| Acceptance | 80 engineering scenarios plus 15 UX scenarios, each Setup/Actions/Expected/Pass criteria. GUI scenarios NOT RUN; record per-version evidence. Per-dialog/theme/scaling checklist in docs/UX_REVIEW.md. |
+| Acceptance | 80 engineering scenarios plus 15 UX scenarios, each Setup/Actions/Expected/Pass criteria. Limited GUI evidence is recorded for WFO discoverability and Work Areas zero-record startup; full UX1/UX7 coverage and all unrelated GUI scenarios remain pending. Record per-version evidence. Per-dialog/theme/scaling checklist in docs/UX_REVIEW.md. |
 | Version/docs/parity | 0.12.0-rc1 current; historical changelog values are historical. Every remaining partial/missing/limited row has a reason. |
 | Release artifacts | Local optional WFO ZIP exists with checksum; no hosted download published. No raw data, temporary DWGs, credentials or crash logs staged. |
 

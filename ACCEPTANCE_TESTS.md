@@ -1,6 +1,6 @@
 # TerraTools LT 0.12.0-rc1 Acceptance Tests
 
-Run these tests in AutoCAD LT 2024 or newer on Windows. Use disposable DWGs and project folders. Record the LT version and mark each scenario Pass or Fail with actual evidence. All GUI scenarios remain NOT RUN until exercised in visible AutoCAD LT. Core Console results are recorded separately in RELEASE_CHECKLIST.md.
+Run these tests in AutoCAD LT 2024 or newer on Windows. Use disposable DWGs and project folders. Record the LT version and mark each scenario Pass or Fail with actual evidence. For pushed commit 42915ad, the user has confirmed two limited visible GUI results: successful WFO Plant Manager/database discoverability, and the Work Areas zero-record manager regression reproduced then confirmed fixed. Full scenario coverage and unrelated GUI tests remain pending. No LT version, theme or scaling coverage is inferred from those reports. Core Console results are recorded separately in RELEASE_CHECKLIST.md.
 
 ## 1. Load, launcher, and reload
 
@@ -510,9 +510,11 @@ Run these tests in AutoCAD LT 2024 or newer on Windows. Use disposable DWGs and 
 
 ## UX acceptance, 2026-10-07
 
-These 15 scenarios supplement the 80 engineering scenarios. All are **NOT RUN in visible AutoCAD LT**. Use disposable drawings/projects and record LT version, theme, display scaling and evidence. Also complete the per-dialog visual matrix in docs/UX_REVIEW.md.
+These 15 scenarios supplement the 80 engineering scenarios. Limited user-confirmed visible GUI evidence is recorded under UX1 and UX7 below; neither full scenario is signed off. Other UX scenarios remain **NOT RUN in visible AutoCAD LT**. Use disposable drawings/projects and record LT version, theme, display scaling and evidence. Also complete the per-dialog visual matrix in docs/UX_REVIEW.md. The current tools/ux-regression.lsp has 39 read-only logic checks with a valid WFO manifest, or 38 without it; all 39 passed in LT 2027 Core Console after the shared manager repair. Those results do not pass GUI scenarios.
 
 ### UX1. Installed database is visible immediately
+
+**Evidence:** User confirmed that the WFO Plant Manager/database discoverability workflow was manually exercised successfully in visible AutoCAD LT. Full criteria below, including visibility in every view, remain pending unless separately recorded. LT version, theme and scaling were not supplied.
 
 **Setup:** Install the documented WFO package; open a project with zero or a few sample Project Plants.
 
@@ -574,13 +576,15 @@ These 15 scenarios supplement the 80 engineering scenarios. All are **NOT RUN in
 
 ### UX7. Empty shared managers and filtered lists
 
+**Evidence:** User reproduced the Work Areas zero-record manager regression, then confirmed the repair in visible AutoCAD LT. The repair is included in commit 42915ad. This confirms the zero-record startup fix only. Add, search/Clear transitions, cancellation, active-area changes and other managers' empty states still need the full test below. LT version, theme and scaling were not supplied.
+
 **Setup:** Empty sections for Work Areas, Reference Notes, Details, Lighting, Irrigation, Stations and Controllers.
 
 **Actions:** Run TTRELOAD. With a valid project whose WORK_AREAS is nil, run TTWORKAREAS. Search for an absent term and Clear while empty; use Change Work Area and press Enter to leave none active; Close, reopen and Esc. Reopen, Add a Work Area using an ordinary closed boundary, then search for an absent term and Clear again. Repeat empty/populated-to-empty searches in TTREFNOTES, TTDETAILS, TTLIGHTING, TTIRRIGATION, TTSTATIONS and TTCONTROLLERS.
 
 **Expected:** Managers remain open without command-line errors. Empty Work Areas shows "No Work Areas yet. Add a closed boundary to organize objects and schedules." Add, Search, Clear, Change Work Area and Close remain usable. Edit, Remove, Place/Assign, Highlight and Details stay disabled without a selected record. Each other empty section gives its own next step. Filtered-empty status explains Clear.
 
-**Pass criteria:** No consp nil or selection error on initialization, zero search results, record-independent actions or cancellation. Clear restores real records and applicable actions without changing data. No default Work Area is fabricated. This GUI regression is NOT RUN until observed in visible LT; Core Console selection tests do not establish DCL acceptance.
+**Pass criteria:** No consp nil or selection error on initialization, zero search results, record-independent actions or cancellation. Clear restores real records and applicable actions without changing data. No default Work Area is fabricated. The Work Areas zero-record startup repair is confirmed in visible LT; the remaining steps and other managers are pending. Core Console selection tests do not establish DCL acceptance.
 
 ### UX8. Active Work Area is understandable
 

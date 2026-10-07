@@ -1,6 +1,17 @@
 # UX polish review, 2026-10-07
 
-This pass changes native DCL presentation and access to existing workflows. Storage, identity, plant database formats and hydraulic calculations are unchanged. The product remains 0.12.0-rc1. Visible AutoCAD LT GUI acceptance is NOT RUN.
+This pass changes native DCL presentation and access to existing workflows. Storage, identity, plant database formats and hydraulic calculations are unchanged. The product remains 0.12.0-rc1. UX polish is committed in 237212a and the shared manager empty-state repair in 42915ad, the current pushed repository state. Visible GUI evidence is limited to the two user confirmations below; full GUI acceptance remains pending.
+
+## Confirmed visible GUI evidence
+
+Recorded from the user's report on 2026-10-07:
+
+| Workflow | Confirmed result | Remaining scope |
+|---|---|---|
+| WFO Plant Manager/database discoverability | Manually exercised successfully in visible AutoCAD LT. | Full UX1 criteria, adding/placing plants, state preservation, keyboard behavior and the visual matrix are not signed off by this report. |
+| Work Areas with zero records | The consp nil regression was reproduced, then confirmed fixed in visible AutoCAD LT after the shared manager repair. | Populated-to-empty searches, Add/assignment/cancellation workflows and empty-list behavior in other shared managers still require acceptance evidence. |
+
+The LT version, theme, scaling and screen resolution were not specified. These confirmations do not pass any unreported version/theme/scaling combination or the full acceptance suite.
 
 ## Problems and changes
 
@@ -44,9 +55,9 @@ Perform the following checklist for **every row** below, in visible LT 2024 and 
 |---|---|---|---|---|---|---|
 | Home | TT | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 | Task chooser | Home > Project, Tools, Output, Recovery | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
-| Plants | Home > Plants | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+| Plants | Home > Plants | PARTIAL: WFO discoverability confirmed | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 | Project Plant editor | Plants > Add / Edit / New Variant | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
-| Work Areas manager | Home > Work Areas | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+| Work Areas manager | Home > Work Areas | NOT RUN | NOT RUN | PARTIAL: zero-record startup fixed | NOT RUN | NOT RUN |
 | Reference Notes manager | Home > Site / Reference > Reference Notes manager | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 | Details manager | Home > Details | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 | Lighting manager | Home > Lighting | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
@@ -56,12 +67,12 @@ Perform the following checklist for **every row** below, in visible LT 2024 and 
 | Shared record editor | Each shared manager > Edit | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 | Technical Details | Plants / shared manager > Details | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 
-The seven shared managers use one dialog definition. They still need separate review because button meaning, guidance and field content differ. Project creation, preferences, library import, packages and engineering tools retain command-line prompts after a task chooser closes. That behavior is deliberate and must also be checked for a clear return to the parent manager.
+PARTIAL cells record only the limited user confirmations above. They do not pass the other checks in that column. The seven shared managers use one dialog definition. They still need separate review because button meaning, guidance and field content differ. Project creation, preferences, library import, packages and engineering tools retain command-line prompts after a task chooser closes. That behavior is deliberate and must also be checked for a clear return to the parent manager.
 
 ## Verification scope
 
 `tools/check-lisp.mjs` checks Lisp readers/definitions/references and loader inventory. `tools/check-dcl.mjs` checks DCL structure, keys, literal dialog/tile references and literal callback balance. Dynamic callbacks and runtime tile behavior still require manual review and GUI testing.
 
-`tools/ux-regression.lsp` is an optional read-only development check. After loading TerraTools, load that file to check count formatting, database banner text, sample marking, action guards, empty-state messages and task targets. It does not open dialogs. With the installed WFO package it runs 22 checks. Existing foundation/completion regressions and TTRELOAD/TTDEVSMOKE/TTQACHECK also run in LT 2027 Core Console; see the current release checklist for results.
+`tools/ux-regression.lsp` is an optional read-only development check. After loading TerraTools, load that file to check count formatting, database banner text, sample marking, action guards, empty-state messages and task targets. It now includes 17 focused shared-manager selection/empty-state checks. It does not open dialogs. The current file runs 39 checks with a valid WFO manifest, or 38 without one; the installed-banner check is conditional. All 39 passed in LT 2027 Core Console after the shared manager repair. Existing foundation/completion regressions and TTRELOAD/TTDEVSMOKE/TTQACHECK also passed; see the current release checklist for results.
 
-Run UX1 through UX15 in ACCEPTANCE_TESTS.md on disposable projects, then complete the visual matrix above. No visible GUI scenario is marked passed by this sprint.
+Run the remaining coverage in UX1 through UX15 in ACCEPTANCE_TESTS.md on disposable projects, then complete the visual matrix above. The two confirmed workflows are limited evidence; no full multi-step scenario or complete visual-matrix row is marked passed.
